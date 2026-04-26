@@ -1,0 +1,16 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/about/page": "/about",
+  "/admin/page": "/admin",
+  "/api/admin/overview/route": "/api/admin/overview",
+  "/api/admin/waitlist/route": "/api/admin/waitlist",
+  "/api/analytics/track/route": "/api/analytics/track",
+  "/api/health/route": "/api/health",
+  "/api/investor-interest/route": "/api/investor-interest",
+  "/api/referrals/leaderboard/route": "/api/referrals/leaderboard",
+  "/api/waitlist/route": "/api/waitlist",
+  "/favicon.ico/route": "/favicon.ico",
+  "/investors/page": "/investors",
+  "/page": "/"
+}

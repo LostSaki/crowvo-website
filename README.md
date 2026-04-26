@@ -1,8 +1,8 @@
-# Hubly Marketing Site
+# Crowvo Marketing Site
 
-Brand: **Hubly**  
-Tagline: **"Where nights out become communities."**  
-Short copy: **Discover events, join hubs, chat live, and share moments in one app.**
+Brand: **Crowvo**  
+Tagline: **"Social communities first, events built in."**  
+Short copy: **Build private hubs, chat daily, and turn momentum into real-world attendance.**
 
 Production-ready startup marketing website built with:
 - Next.js App Router + TypeScript
@@ -10,9 +10,9 @@ Production-ready startup marketing website built with:
 - Prisma + PostgreSQL (or Supabase Postgres)
 - GA4 + PostHog + Hotjar
 - Resend email confirmations
-- Firebase Auth admin access
 - Cloudflare Turnstile bot protection
 - Upstash Redis distributed rate limiting
+- OpenNext Cloudflare deployment support
 
 ## Project Structure
 
@@ -31,7 +31,7 @@ Production-ready startup marketing website built with:
 - `/` - high-conversion landing page
 - `/investors` - pitch-style investor page + contact form
 - `/about` - mission, vision, founder story section
-- `/admin` - Firebase-authenticated dashboard (analytics + CSV export)
+- `/admin` - token-authenticated dashboard (analytics + CSV export)
 
 ## Setup
 
@@ -41,7 +41,7 @@ Production-ready startup marketing website built with:
    - `copy .env.example .env` (Windows)
 3. Configure required vars in `.env`:
    - `DATABASE_URL`
-   - Firebase vars (`NEXT_PUBLIC_FIREBASE_*`, `FIREBASE_*`, `ADMIN_ALLOWED_EMAILS`)
+   - `ADMIN_TOKEN`
    - Upstash vars (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`)
    - Cloudflare Turnstile vars (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `CLOUDFLARE_TURNSTILE_SECRET`)
    - Optional analytics + email keys
@@ -63,9 +63,7 @@ Use `.env.example` as template:
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `CLOUDFLARE_TURNSTILE_SECRET` - Cloudflare Turnstile
 - `RESEND_API_KEY` and `RESEND_FROM_EMAIL` - transactional waitlist emails
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` - distributed rate limiting
-- `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID`
-- `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` - server-side token verification
-- `ADMIN_ALLOWED_EMAILS` - comma-separated admin allowlist
+- `ADMIN_TOKEN` - admin bearer token for dashboard APIs
 
 ## Deployment
 
@@ -75,6 +73,15 @@ Use `.env.example` as template:
 - Run `prisma db push` in CI/CD or post-deploy hook
 - Optional: Proxy domain through Cloudflare and keep SSL mode Full (strict)
 - Cloudflare launch guide: `docs/cloudflare-launch.md`
+
+### Cloudflare Workers deploy (OpenNext)
+
+1. Build Workers bundle:
+   - `npm run cf:build`
+2. Preview locally:
+   - `npm run cf:preview`
+3. Deploy:
+   - `npm run cf:deploy`
 
 ## Docker (Local Preview)
 
@@ -118,8 +125,8 @@ Notes:
   - `/?ref=CODE` links credit referrals
   - Public leaderboard endpoint ranks top ambassadors
 - Admin auth:
-  - Google login via Firebase Auth
-  - Backend routes verify Firebase ID token and allowlisted admin emails
+  - Token login via `ADMIN_TOKEN`
+  - Backend routes verify bearer token server-side
 - Abuse prevention:
   - Cloudflare Turnstile on waitlist and investor forms
   - Upstash Redis sliding-window rate limits for serverless

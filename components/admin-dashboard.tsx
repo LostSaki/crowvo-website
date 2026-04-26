@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
-import { firebaseAuth, googleProvider } from "@/lib/firebase-client";
+import { useCallback, useState } from "react";
 
 type WaitlistRow = {
   id: string;
@@ -38,46 +36,55 @@ type AdminData = {
 };
 
 export function AdminDashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const [adminToken, setAdminToken] = useState(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return localStorage.getItem("crowvo-admin-token") ?? "";
+  });
+  const [isAuthed, setIsAuthed] = useState(false);
   const [data, setData] = useState<AdminData | null>(null);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    return onAuthStateChanged(firebaseAuth, async (nextUser) => {
-      setUser(nextUser);
-      if (!nextUser) {
-        setData(null);
-        setLoading(false);
-        return;
+  const loadOverview = useCallback(async (token: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/admin/overview", {
+        headers: { authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
+        throw new Error("You are authenticated but not authorized as admin.");
       }
-
-      try {
-        const token = await nextUser.getIdToken();
-        const response = await fetch("/api/admin/overview", {
-          headers: { authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) {
-          throw new Error("You are authenticated but not authorized as admin.");
-        }
-        const payload = (await response.json()) as AdminData;
-        setData(payload);
-        setError("");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load dashboard.");
-      } finally {
-        setLoading(false);
-      }
-    });
+      const payload = (await response.json()) as AdminData;
+      setData(payload);
+      setError("");
+      setIsAuthed(true);
+      localStorage.setItem("crowvo-admin-token", token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load dashboard.");
+      setData(null);
+      setIsAuthed(false);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  async function exportCsv() {
-    if (!user) {
+  async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!adminToken.trim()) {
+      setError("Enter an admin token.");
       return;
     }
-    const token = await user.getIdToken();
+    await loadOverview(adminToken.trim());
+  }
+
+  async function exportCsv() {
+    if (!isAuthed || !adminToken) {
+      return;
+    }
     const response = await fetch("/api/admin/waitlist", {
-      headers: { authorization: `Bearer ${token}` },
+      headers: { authorization: `Bearer ${adminToken}` },
     });
     if (!response.ok) {
       setError("Failed to export CSV.");
@@ -94,23 +101,40 @@ export function AdminDashboard() {
     URL.revokeObjectURL(url);
   }
 
+  function signOut() {
+    localStorage.removeItem("crowvo-admin-token");
+    setAdminToken("");
+    setData(null);
+    setIsAuthed(false);
+    setError("");
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-12 sm:px-6">
       <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/85">
         <div>
           <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-          <p className="text-sm text-muted">Firebase-secured analytics, referral growth, and login security monitoring.</p>
+          <p className="text-sm text-muted">Token-secured analytics, referral growth, and login security monitoring.</p>
         </div>
-        {!user ? (
-          <button
-            onClick={() => signInWithPopup(firebaseAuth, googleProvider)}
-            className="rounded-xl bg-gradient-to-r from-[#5865F2] to-[#7c5cff] px-4 py-2 text-sm font-semibold text-white"
-          >
-            Sign in with Google
-          </button>
+        {!isAuthed ? (
+          <form onSubmit={onSignIn} className="flex items-center gap-2">
+            <input
+              type="password"
+              value={adminToken}
+              onChange={(event) => setAdminToken(event.target.value)}
+              placeholder="Enter ADMIN_TOKEN"
+              className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-white/20 dark:bg-black/30"
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-gradient-to-r from-[#5865F2] to-[#7c5cff] px-4 py-2 text-sm font-semibold text-white"
+            >
+              Sign in
+            </button>
+          </form>
         ) : (
           <button
-            onClick={() => signOut(firebaseAuth)}
+            onClick={signOut}
             className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm dark:border-white/20 dark:bg-transparent"
           >
             Sign out

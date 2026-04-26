@@ -25,35 +25,52 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 401 });
   }
 
-  const [waitlistCount, investorCount, latestWaitlist, topReferrers, recentEvents] = await Promise.all([
-    prisma.waitlistSignup.count(),
-    prisma.investorInterest.count(),
-    prisma.waitlistSignup.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 100,
-      select: {
-        id: true,
-        email: true,
-        inviteCode: true,
-        referralCode: true,
-        source: true,
-        createdAt: true,
-      },
-    }),
-    prisma.waitlistSignup.findMany({
-      take: 5,
-      orderBy: {
-        referrals: {
-          _count: "desc",
+  let waitlistCount = 0;
+  let investorCount = 0;
+  let latestWaitlist: RecentSignup[] = [];
+  let topReferrers: TopReferrer[] = [];
+  let recentEvents: { eventName: string; utmSource: string | null; createdAt: Date }[] = [];
+
+  try {
+    [waitlistCount, investorCount, latestWaitlist, topReferrers] = await Promise.all([
+      prisma.waitlistSignup.count(),
+      prisma.investorInterest.count(),
+      prisma.waitlistSignup.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        select: {
+          id: true,
+          email: true,
+          inviteCode: true,
+          referralCode: true,
+          source: true,
+          createdAt: true,
         },
-      },
-      select: {
-        email: true,
-        inviteCode: true,
-        _count: { select: { referrals: true } },
-      },
-    }),
-    prisma.analyticsEvent.findMany({
+      }),
+      prisma.waitlistSignup.findMany({
+        take: 5,
+        orderBy: {
+          referrals: {
+            _count: "desc",
+          },
+        },
+        select: {
+          email: true,
+          inviteCode: true,
+          _count: { select: { referrals: true } },
+        },
+      }),
+    ]);
+  } catch (error) {
+    console.error("Admin overview query failed.", error);
+    return NextResponse.json(
+      { error: "Admin data query failed. Verify DATABASE_URL and deployed Prisma schema." },
+      { status: 500 },
+    );
+  }
+
+  try {
+    recentEvents = await prisma.analyticsEvent.findMany({
       orderBy: { createdAt: "desc" },
       take: 500,
       select: {
@@ -61,8 +78,10 @@ export async function GET(request: NextRequest) {
         utmSource: true,
         createdAt: true,
       },
-    }),
-  ]);
+    });
+  } catch (error) {
+    console.error("Admin analytics query failed; continuing without analytics snapshot.", error);
+  }
 
   const referralSignups = latestWaitlist.filter((item: RecentSignup) => Boolean(item.referralCode)).length;
   const directSignups = latestWaitlist.length - referralSignups;

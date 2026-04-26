@@ -25,9 +25,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 401 });
   }
 
-  const rows = await prisma.waitlistSignup.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  let rows: WaitlistCsvRow[] = [];
+  try {
+    rows = await prisma.waitlistSignup.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Admin waitlist export query failed.", error);
+    return NextResponse.json(
+      { error: "Waitlist export failed. Verify DATABASE_URL and deployed Prisma schema." },
+      { status: 500 },
+    );
+  }
 
   const header = "email,inviteCode,referralCode,source,createdAt";
   const body = rows

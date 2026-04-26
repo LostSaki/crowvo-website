@@ -4279,7 +4279,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/.prisma/client/index.js": {
-      "bytes": 14739,
+      "bytes": 14715,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/@prisma/client/runtime/library.js",
@@ -4699,7 +4699,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/api/admin/overview/route.js": {
-      "bytes": 9426,
+      "bytes": 9746,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -4750,7 +4750,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route.js": {
-      "bytes": 8251,
+      "bytes": 8453,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -8232,7 +8232,7 @@
           "bytesInOutput": 201242
         },
         ".open-next/server-functions/default/node_modules/.prisma/client/index.js": {
-          "bytesInOutput": 12812
+          "bytesInOutput": 12797
         },
         ".open-next/server-functions/default/node_modules/.prisma/client/default.js": {
           "bytesInOutput": 166
@@ -8280,10 +8280,10 @@
           "bytesInOutput": 10242
         },
         ".open-next/server-functions/default/.next/server/app/api/admin/overview/route.js": {
-          "bytesInOutput": 9617
+          "bytesInOutput": 9946
         },
         ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route.js": {
-          "bytesInOutput": 8378
+          "bytesInOutput": 8585
         },
         ".open-next/server-functions/default/.next/server/app/_global-error/page.js": {
           "bytesInOutput": 27906
@@ -8463,7 +8463,7 @@
           "bytesInOutput": 63101
         }
       },
-      "bytes": 4135585
+      "bytes": 4136106
     }
   }
 }

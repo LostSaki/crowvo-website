@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model WaitlistSignup {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  inviteCode    String          @unique
+  referralCode  String?
+  source        String?
+  referredById  String?
+  referredBy    WaitlistSignup? @relation("ReferralTree", fields: [referredById], references: [id])
+  referrals     WaitlistSignup[] @relation("ReferralTree")
+  createdAt     DateTime        @default(now())
+}
+
+model InvestorInterest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  company   String
+  checkSize String?
+  message   String
+  createdAt DateTime @default(now())
+}

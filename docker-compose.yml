@@ -1,0 +1,49 @@
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm run prisma:generate && npm run prisma:push && npm run dev -- -H 0.0.0.0 -p 3000"
+
+  web-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      target: runner
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npm run prisma:generate && npm run prisma:push && npm run start"
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hubly
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hubly"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

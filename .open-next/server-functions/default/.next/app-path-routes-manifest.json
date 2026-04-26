@@ -1,8 +1,6 @@
 {
-  "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
-  "/about/page": "/about",
-  "/admin/page": "/admin",
+  "/_global-error/page": "/_global-error",
   "/api/admin/overview/route": "/api/admin/overview",
   "/api/admin/waitlist/route": "/api/admin/waitlist",
   "/api/analytics/track/route": "/api/analytics/track",
@@ -11,6 +9,8 @@
   "/api/referrals/leaderboard/route": "/api/referrals/leaderboard",
   "/api/waitlist/route": "/api/waitlist",
   "/favicon.ico/route": "/favicon.ico",
+  "/about/page": "/about",
   "/investors/page": "/investors",
-  "/page": "/"
+  "/page": "/",
+  "/admin/page": "/admin"
 }

@@ -1,1 +1,0 @@
-(globalThis.TURBOPACK||(globalThis.TURBOPACK=[])).push(["object"==typeof document?document.currentScript:void 0,20160,e=>{"use strict";var t=e.i(43476),i=e.i(71645);e.s(["TurnstileWidget",0,function({onToken:e}){let s=(0,i.useRef)(null);return(0,i.useEffect)(()=>{},[e]),(0,t.jsx)("div",{ref:s,className:"min-h-16"})}])}]);

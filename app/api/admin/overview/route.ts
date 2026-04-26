@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [waitlistCount, investorCount, latestWaitlist, topReferrers] = await Promise.all([
+  const [waitlistCount, investorCount, latestWaitlist, topReferrers, recentEvents] = await Promise.all([
     prisma.waitlistSignup.count(),
     prisma.investorInterest.count(),
     prisma.waitlistSignup.findMany({
@@ -52,6 +52,15 @@ export async function GET(request: NextRequest) {
         _count: { select: { referrals: true } },
       },
     }),
+    prisma.analyticsEvent.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 500,
+      select: {
+        eventName: true,
+        utmSource: true,
+        createdAt: true,
+      },
+    }),
   ]);
 
   const referralSignups = latestWaitlist.filter((item: RecentSignup) => Boolean(item.referralCode)).length;
@@ -68,6 +77,21 @@ export async function GET(request: NextRequest) {
       : "Signup joined without referral code.",
   }));
 
+  const pageViews = recentEvents.filter((event) => event.eventName === "page_view").length;
+  const startHubClicks = recentEvents.filter((event) => event.eventName === "cta_start_hub_click").length;
+  const waitlistCtaClicks = recentEvents.filter((event) => event.eventName === "cta_waitlist_click").length;
+  const requestDeckClicks = recentEvents.filter((event) => event.eventName === "cta_request_deck_click").length;
+  const topTrafficSources = Object.entries(
+    recentEvents.reduce<Record<string, number>>((acc, event) => {
+      const source = event.utmSource ?? "direct";
+      acc[source] = (acc[source] ?? 0) + 1;
+      return acc;
+    }, {}),
+  )
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([source, count]) => ({ source, count }));
+
   return NextResponse.json({
     waitlistCount,
     investorCount,
@@ -76,6 +100,11 @@ export async function GET(request: NextRequest) {
       referralSignups,
       directSignups,
       estimatedConversionRate,
+      pageViews,
+      startHubClicks,
+      waitlistCtaClicks,
+      requestDeckClicks,
+      topTrafficSources,
     },
     securityEvents,
     topReferrers: topReferrers.map((item: TopReferrer) => ({

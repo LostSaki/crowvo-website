@@ -3,6 +3,7 @@
 import { useState } from "react";
 import posthog from "posthog-js";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { trackEvent } from "@/lib/analytics-client";
 
 export function WaitlistForm() {
   const hasTurnstile = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
@@ -37,6 +38,7 @@ export function WaitlistForm() {
       }
 
       posthog.capture("waitlist_submission", { source });
+      trackEvent("waitlist_submission", { source });
       setStatus("success");
       setMessage(data.message ?? "You're in! We'll send your invite soon.");
       setReferralLink(data.referralLink ?? "");
@@ -50,7 +52,7 @@ export function WaitlistForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="w-full rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-white/15 dark:bg-white/5"
+      className="w-full rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-sm backdrop-blur dark:border-white/15 dark:bg-[#151a2b]/85"
     >
       <label htmlFor="email" className="mb-2 block text-sm text-muted">
         Get early access before public launch
@@ -63,12 +65,14 @@ export function WaitlistForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@startup.com"
-          className="h-12 flex-1 rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none ring-indigo-500 focus:ring-2 dark:border-white/20 dark:bg-black/30 dark:text-white"
+          className="h-12 flex-1 rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none ring-[#5865F2] focus:ring-2 dark:border-white/20 dark:bg-black/40 dark:text-white"
         />
         <button
           type="submit"
           disabled={status === "loading" || (hasTurnstile && !turnstileToken)}
-          className="h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 px-6 text-sm font-semibold text-white transition hover:scale-[1.02] disabled:opacity-70"
+          data-analytics-event="cta_waitlist_click"
+          data-analytics-cta="join_waitlist_form"
+          className="h-12 rounded-xl bg-gradient-to-r from-[#5865F2] to-[#7c5cff] px-6 text-sm font-semibold text-white transition hover:scale-[1.02] disabled:opacity-70"
         >
           {status === "loading" ? "Joining..." : "Join Waitlist"}
         </button>

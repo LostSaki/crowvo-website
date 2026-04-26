@@ -74,6 +74,7 @@ Use `.env.example` as template:
 - Add environment variables in Vercel project settings
 - Run `prisma db push` in CI/CD or post-deploy hook
 - Optional: Proxy domain through Cloudflare and keep SSL mode Full (strict)
+- Cloudflare launch guide: `docs/cloudflare-launch.md`
 
 ## Docker (Local Preview)
 

@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Crowvo | Private Communities for Real-World Events",
+  title: "Crowvo | Private Social Communities That Drive Real Events",
   description:
-    "Crowvo blends event discovery, private community hubs, live chat, and social coordination in one app.",
+    "Crowvo is a privacy-first social platform where communities chat, grow, and turn online energy into real-world events.",
 };
 
 export default function RootLayout({

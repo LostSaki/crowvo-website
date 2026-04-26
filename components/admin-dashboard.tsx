@@ -22,6 +22,11 @@ type AdminData = {
     referralSignups: number;
     directSignups: number;
     estimatedConversionRate: number;
+    pageViews: number;
+    startHubClicks: number;
+    waitlistCtaClicks: number;
+    requestDeckClicks: number;
+    topTrafficSources: { source: string; count: number }[];
   };
   securityEvents: {
     id: string;
@@ -91,7 +96,7 @@ export function AdminDashboard() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-12 sm:px-6">
-      <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-white/15 dark:bg-white/5">
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/85">
         <div>
           <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
           <p className="text-sm text-muted">Firebase-secured analytics, referral growth, and login security monitoring.</p>
@@ -99,7 +104,7 @@ export function AdminDashboard() {
         {!user ? (
           <button
             onClick={() => signInWithPopup(firebaseAuth, googleProvider)}
-            className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-xl bg-gradient-to-r from-[#5865F2] to-[#7c5cff] px-4 py-2 text-sm font-semibold text-white"
           >
             Sign in with Google
           </button>
@@ -119,15 +124,15 @@ export function AdminDashboard() {
       {data ? (
         <>
           <section className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-white/15 dark:bg-white/5">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
               <p className="text-xs text-muted">Total waitlist users</p>
               <p className="mt-1 text-2xl font-semibold">{data.waitlistCount}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-white/15 dark:bg-white/5">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
               <p className="text-xs text-muted">Investor leads</p>
               <p className="mt-1 text-2xl font-semibold">{data.investorCount}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-white/15 dark:bg-white/5">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
               <p className="text-xs text-muted">Export waitlist</p>
               <button onClick={exportCsv} className="mt-2 text-sm text-indigo-600 dark:text-indigo-300">
                 Download CSV
@@ -136,7 +141,7 @@ export function AdminDashboard() {
           </section>
 
           <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-white/15 dark:bg-white/5">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
               <h2 className="text-lg font-semibold">Top referrers</h2>
               <ul className="mt-3 space-y-2 text-sm">
                 {data.topReferrers.map((item) => (
@@ -151,9 +156,13 @@ export function AdminDashboard() {
               </ul>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-white/15 dark:bg-white/5">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
               <h2 className="text-lg font-semibold">Analytics Snapshot</h2>
               <div className="mt-3 space-y-2 text-sm">
+                <p className="flex items-center justify-between">
+                  <span className="text-muted">Page views</span>
+                  <span className="font-medium">{data.analytics.pageViews}</span>
+                </p>
                 <p className="flex items-center justify-between">
                   <span className="text-muted">Referral signups</span>
                   <span className="font-medium">{data.analytics.referralSignups}</span>
@@ -166,10 +175,22 @@ export function AdminDashboard() {
                   <span className="text-muted">Investor conversion</span>
                   <span className="font-medium">{data.analytics.estimatedConversionRate}%</span>
                 </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-muted">Start hub clicks</span>
+                  <span className="font-medium">{data.analytics.startHubClicks}</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-muted">Waitlist CTA clicks</span>
+                  <span className="font-medium">{data.analytics.waitlistCtaClicks}</span>
+                </p>
+                <p className="flex items-center justify-between">
+                  <span className="text-muted">Request deck clicks</span>
+                  <span className="font-medium">{data.analytics.requestDeckClicks}</span>
+                </p>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-sm dark:border-white/15 dark:bg-white/5">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
               <h2 className="text-lg font-semibold">Security Log</h2>
               <ul className="mt-3 space-y-2 text-sm">
                 {data.securityEvents.map((event) => (
@@ -186,7 +207,22 @@ export function AdminDashboard() {
             </div>
           </section>
 
-          <section className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white/85 shadow-sm dark:border-white/15 dark:bg-white/5">
+          <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
+            <h2 className="text-lg font-semibold">Attribution Sources</h2>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {data.analytics.topTrafficSources.map((source) => (
+                <div
+                  key={source.source}
+                  className="rounded-lg border border-slate-200/70 bg-white/70 p-3 text-sm dark:border-white/10 dark:bg-transparent"
+                >
+                  <p className="font-medium capitalize">{source.source}</p>
+                  <p className="text-xs text-muted">{source.count} events</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-slate-200/80 text-xs text-muted dark:border-white/10">
                   <tr>

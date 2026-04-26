@@ -3,6 +3,7 @@
 import { useState } from "react";
 import posthog from "posthog-js";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { trackEvent } from "@/lib/analytics-client";
 
 export function InvestorForm() {
   const hasTurnstile = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
@@ -28,6 +29,7 @@ export function InvestorForm() {
         throw new Error(data.error ?? "Could not submit request");
       }
       posthog.capture("investor_form_submission");
+      trackEvent("investor_form_submission");
       setStatus("success");
       setMessage("Thanks for your interest. We'll follow up with deck access.");
       event.currentTarget.reset();
@@ -76,6 +78,8 @@ export function InvestorForm() {
       <button
         type="submit"
         disabled={status === "loading" || (hasTurnstile && !turnstileToken)}
+        data-analytics-event="cta_request_deck_click"
+        data-analytics-cta="investor_form_submit"
         className="h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 px-4 text-sm font-semibold text-white"
       >
         {status === "loading" ? "Submitting..." : "Request Investor Brief"}

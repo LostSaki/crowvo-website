@@ -4,6 +4,18 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-04-26",
   "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "crow-vo.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.crow-vo.com",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

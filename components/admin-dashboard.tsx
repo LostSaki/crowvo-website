@@ -54,7 +54,8 @@ export function AdminDashboard() {
         headers: { authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
-        throw new Error("You are authenticated but not authorized as admin.");
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "You are authenticated but not authorized as admin.");
       }
       const payload = (await response.json()) as AdminData;
       setData(payload);

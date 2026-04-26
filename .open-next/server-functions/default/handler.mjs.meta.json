@@ -3643,12 +3643,12 @@
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js": {
       "bytes": 414,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js": {
       "bytes": 414,
       "imports": [],
       "format": "cjs"
@@ -3702,14 +3702,14 @@
           "original": "C:\\Users\\dylan\\OneDrive\\Documents\\VS Code, Random\\Newrandom project\\crowvo-website\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\analytics\\track\\route_client-reference-manifest.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\dylan\\OneDrive\\Documents\\VS Code, Random\\Newrandom project\\crowvo-website\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\admin\\waitlist\\route_client-reference-manifest.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js",
           "kind": "require-call",
           "original": "C:\\Users\\dylan\\OneDrive\\Documents\\VS Code, Random\\Newrandom project\\crowvo-website\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\admin\\overview\\route_client-reference-manifest.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\dylan\\OneDrive\\Documents\\VS Code, Random\\Newrandom project\\crowvo-website\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\admin\\waitlist\\route_client-reference-manifest.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/api/waitlist/route_client-reference-manifest.js",
@@ -4699,7 +4699,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/api/admin/overview/route.js": {
-      "bytes": 9386,
+      "bytes": 9426,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -4750,7 +4750,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route.js": {
-      "bytes": 8211,
+      "bytes": 8251,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -5293,7 +5293,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/admin/page.js": {
-      "bytes": 38086,
+      "bytes": 38134,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -8153,10 +8153,10 @@
         ".open-next/server-functions/default/.next/server/app/api/analytics/track/route_client-reference-manifest.js": {
           "bytesInOutput": 583
         },
-        ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js": {
           "bytesInOutput": 580
         },
-        ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js": {
           "bytesInOutput": 580
         },
         ".open-next/server-functions/default/.next/server/app/api/waitlist/route_client-reference-manifest.js": {
@@ -8280,10 +8280,10 @@
           "bytesInOutput": 10242
         },
         ".open-next/server-functions/default/.next/server/app/api/admin/overview/route.js": {
-          "bytesInOutput": 9572
+          "bytesInOutput": 9617
         },
         ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route.js": {
-          "bytesInOutput": 8333
+          "bytesInOutput": 8378
         },
         ".open-next/server-functions/default/.next/server/app/_global-error/page.js": {
           "bytesInOutput": 27906
@@ -8307,7 +8307,7 @@
           "bytesInOutput": 31771
         },
         ".open-next/server-functions/default/.next/server/app/admin/page.js": {
-          "bytesInOutput": 38261
+          "bytesInOutput": 38312
         },
         ".open-next/server-functions/default/.next/server/app/page.js": {
           "bytesInOutput": 173818
@@ -8463,7 +8463,7 @@
           "bytesInOutput": 63101
         }
       },
-      "bytes": 4135444
+      "bytes": 4135585
     }
   }
 }

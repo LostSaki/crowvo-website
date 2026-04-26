@@ -20,8 +20,9 @@ function escapeCsv(value: string | null) {
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin(request);
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unauthorized";
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 
   const rows = await prisma.waitlistSignup.findMany({

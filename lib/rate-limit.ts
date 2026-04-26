@@ -32,10 +32,15 @@ export async function limitRequests(
     return fallbackRateLimit(key, maxRequests, windowMs);
   }
 
-  const result = await ratelimit.limit(key);
-  return {
-    success: result.success,
-    remaining: result.remaining,
-    retryAfterSec: result.reset ? Math.max(0, Math.ceil((result.reset - Date.now()) / 1000)) : 0,
-  };
+  try {
+    const result = await ratelimit.limit(key);
+    return {
+      success: result.success,
+      remaining: result.remaining,
+      retryAfterSec: result.reset ? Math.max(0, Math.ceil((result.reset - Date.now()) / 1000)) : 0,
+    };
+  } catch (error) {
+    console.error("Distributed rate-limit failed; falling back to local limiter.", error);
+    return fallbackRateLimit(key, maxRequests, windowMs);
+  }
 }

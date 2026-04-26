@@ -3643,12 +3643,12 @@
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js": {
       "bytes": 323,
       "imports": [],
       "format": "cjs"
     },
-    ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js": {
+    ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js": {
       "bytes": 323,
       "imports": [],
       "format": "cjs"
@@ -3702,14 +3702,14 @@
           "original": "C:\\Users\\dylan\\OneDrive\\Documents\\VS Code, Random\\Newrandom project\\crowvo-website\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\analytics\\track\\route_client-reference-manifest.js"
         },
         {
-          "path": ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js",
-          "kind": "require-call",
-          "original": "C:\\Users\\dylan\\OneDrive\\Documents\\VS Code, Random\\Newrandom project\\crowvo-website\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\admin\\waitlist\\route_client-reference-manifest.js"
-        },
-        {
           "path": ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js",
           "kind": "require-call",
           "original": "C:\\Users\\dylan\\OneDrive\\Documents\\VS Code, Random\\Newrandom project\\crowvo-website\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\admin\\overview\\route_client-reference-manifest.js"
+        },
+        {
+          "path": ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js",
+          "kind": "require-call",
+          "original": "C:\\Users\\dylan\\OneDrive\\Documents\\VS Code, Random\\Newrandom project\\crowvo-website\\.open-next\\server-functions\\default\\.next\\server\\app\\api\\admin\\waitlist\\route_client-reference-manifest.js"
         },
         {
           "path": ".open-next/server-functions/default/.next/server/app/api/waitlist/route_client-reference-manifest.js",
@@ -6867,10 +6867,10 @@
         ".open-next/server-functions/default/.next/server/app/api/analytics/track/route_client-reference-manifest.js": {
           "bytesInOutput": 480
         },
-        ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js": {
           "bytesInOutput": 478
         },
-        ".open-next/server-functions/default/.next/server/app/api/admin/overview/route_client-reference-manifest.js": {
+        ".open-next/server-functions/default/.next/server/app/api/admin/waitlist/route_client-reference-manifest.js": {
           "bytesInOutput": 478
         },
         ".open-next/server-functions/default/.next/server/app/api/waitlist/route_client-reference-manifest.js": {

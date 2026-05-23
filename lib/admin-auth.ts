@@ -1,17 +1,53 @@
+import { timingSafeEqual } from "node:crypto";
 import { NextRequest } from "next/server";
 
+function parseBasicAuth(header: string | null): { username: string; password: string } | null {
+  if (!header?.startsWith("Basic ")) {
+    return null;
+  }
+  const encoded = header.slice("Basic ".length).trim();
+  let decoded: string;
+  try {
+    decoded = Buffer.from(encoded, "base64").toString("utf8");
+  } catch {
+    return null;
+  }
+  const colonIndex = decoded.indexOf(":");
+  if (colonIndex < 0) {
+    return null;
+  }
+  return {
+    username: decoded.slice(0, colonIndex),
+    password: decoded.slice(colonIndex + 1),
+  };
+}
+
+function constantTimeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, "utf8");
+  const bufB = Buffer.from(b, "utf8");
+  if (bufA.length !== bufB.length) {
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
+}
+
 export async function requireAdmin(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    throw new Error("Missing bearer token.");
+  const expectedUser = process.env.ADMIN_USERNAME;
+  const expectedPass = process.env.ADMIN_PASSWORD;
+  if (!expectedUser || !expectedPass) {
+    throw new Error("ADMIN_USERNAME / ADMIN_PASSWORD are not configured.");
   }
-  const token = authHeader.slice("Bearer ".length).trim();
-  const expected = process.env.ADMIN_TOKEN;
-  if (!expected) {
-    throw new Error("ADMIN_TOKEN is not configured.");
+
+  const credentials = parseBasicAuth(request.headers.get("authorization"));
+  if (!credentials) {
+    throw new Error("Missing or invalid authorization. Use Basic auth (username + password).");
   }
-  if (token !== expected) {
-    throw new Error("Invalid admin token.");
+
+  if (
+    !constantTimeCompare(credentials.username, expectedUser) ||
+    !constantTimeCompare(credentials.password, expectedPass)
+  ) {
+    throw new Error("Invalid admin credentials.");
   }
   return { ok: true };
 }

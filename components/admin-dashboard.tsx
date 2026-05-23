@@ -35,23 +35,39 @@ type AdminData = {
   }[];
 };
 
+function basicAuthorizationHeader(username: string, password: string) {
+  const pair = `${username}:${password}`;
+  const bytes = new TextEncoder().encode(pair);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return `Basic ${btoa(binary)}`;
+}
+
 export function AdminDashboard() {
-  const [adminToken, setAdminToken] = useState(() => {
+  const [username, setUsername] = useState(() => {
     if (typeof window === "undefined") {
       return "";
     }
-    return localStorage.getItem("crowvo-admin-token") ?? "";
+    return localStorage.getItem("crowvo-admin-user") ?? "";
+  });
+  const [password, setPassword] = useState(() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    return localStorage.getItem("crowvo-admin-pass") ?? "";
   });
   const [isAuthed, setIsAuthed] = useState(false);
   const [data, setData] = useState<AdminData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const loadOverview = useCallback(async (token: string) => {
+  const loadOverview = useCallback(async (user: string, pass: string) => {
     setLoading(true);
     try {
       const response = await fetch("/api/admin/overview", {
-        headers: { authorization: `Bearer ${token}` },
+        headers: { authorization: basicAuthorizationHeader(user, pass) },
       });
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -61,7 +77,8 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
-      localStorage.setItem("crowvo-admin-token", token);
+      localStorage.setItem("crowvo-admin-user", user);
+      localStorage.setItem("crowvo-admin-pass", pass);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
@@ -73,19 +90,19 @@ export function AdminDashboard() {
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!adminToken.trim()) {
-      setError("Enter an admin token.");
+    if (!username.trim() || !password) {
+      setError("Enter your admin username and password.");
       return;
     }
-    await loadOverview(adminToken.trim());
+    await loadOverview(username.trim(), password);
   }
 
   async function exportCsv() {
-    if (!isAuthed || !adminToken) {
+    if (!isAuthed || !username.trim()) {
       return;
     }
     const response = await fetch("/api/admin/waitlist", {
-      headers: { authorization: `Bearer ${adminToken}` },
+      headers: { authorization: basicAuthorizationHeader(username.trim(), password) },
     });
     if (!response.ok) {
       setError("Failed to export CSV.");
@@ -103,8 +120,10 @@ export function AdminDashboard() {
   }
 
   function signOut() {
-    localStorage.removeItem("crowvo-admin-token");
-    setAdminToken("");
+    localStorage.removeItem("crowvo-admin-user");
+    localStorage.removeItem("crowvo-admin-pass");
+    setUsername("");
+    setPassword("");
     setData(null);
     setIsAuthed(false);
     setError("");
@@ -115,15 +134,24 @@ export function AdminDashboard() {
       <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/85">
         <div>
           <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-          <p className="text-sm text-muted">Token-secured analytics, referral growth, and login security monitoring.</p>
+          <p className="text-sm text-muted">Password-protected analytics, referral growth, and login security monitoring.</p>
         </div>
         {!isAuthed ? (
-          <form onSubmit={onSignIn} className="flex items-center gap-2">
+          <form onSubmit={onSignIn} className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              autoComplete="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="Username"
+              className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-white/20 dark:bg-black/30"
+            />
             <input
               type="password"
-              value={adminToken}
-              onChange={(event) => setAdminToken(event.target.value)}
-              placeholder="Enter ADMIN_TOKEN"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Password"
               className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-white/20 dark:bg-black/30"
             />
             <button

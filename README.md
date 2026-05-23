@@ -31,7 +31,7 @@ Production-ready startup marketing website built with:
 - `/` - high-conversion landing page
 - `/investors` - pitch-style investor page + contact form
 - `/about` - mission, vision, founder story section
-- `/admin` - token-authenticated dashboard (analytics + CSV export)
+- `/admin` - username/password-authenticated dashboard (analytics + CSV export)
 
 ## Setup
 
@@ -41,7 +41,7 @@ Production-ready startup marketing website built with:
    - `copy .env.example .env` (Windows)
 3. Configure required vars in `.env`:
    - `DATABASE_URL`
-   - `ADMIN_TOKEN`
+   - `ADMIN_USERNAME` and `ADMIN_PASSWORD`
    - Upstash vars (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`)
    - Cloudflare Turnstile vars (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `CLOUDFLARE_TURNSTILE_SECRET`)
    - Optional analytics + email keys
@@ -63,7 +63,7 @@ Use `.env.example` as template:
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `CLOUDFLARE_TURNSTILE_SECRET` - Cloudflare Turnstile
 - `RESEND_API_KEY` and `RESEND_FROM_EMAIL` - transactional waitlist emails
 - `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` - distributed rate limiting
-- `ADMIN_TOKEN` - admin bearer token for dashboard APIs
+- `ADMIN_USERNAME` / `ADMIN_PASSWORD` - dashboard login (verified server-side with HTTP Basic auth)
 
 ## Deployment
 
@@ -125,8 +125,8 @@ Notes:
   - `/?ref=CODE` links credit referrals
   - Public leaderboard endpoint ranks top ambassadors
 - Admin auth:
-  - Token login via `ADMIN_TOKEN`
-  - Backend routes verify bearer token server-side
+  - Login with username + password (`ADMIN_USERNAME` / `ADMIN_PASSWORD`)
+  - API routes validate HTTP Basic auth server-side
 - Abuse prevention:
   - Cloudflare Turnstile on waitlist and investor forms
   - Upstash Redis sliding-window rate limits for serverless

@@ -27,7 +27,8 @@ Set these in Cloudflare project settings before first deploy.
 
 - **Required secret**
   - `DATABASE_URL`
-  - `ADMIN_TOKEN`
+  - `ADMIN_USERNAME`
+  - `ADMIN_PASSWORD`
   - `CLOUDFLARE_TURNSTILE_SECRET`
   - `UPSTASH_REDIS_REST_TOKEN`
   - `RESEND_API_KEY` (if sending emails)
@@ -47,7 +48,7 @@ After first successful deploy:
 
 1. Open `/api/health` and confirm `{ "ok": true, ... }`.
 2. Submit waitlist form once (valid Turnstile token).
-3. Open `/admin`, sign in with `ADMIN_TOKEN`, and verify metrics load.
+3. Open `/admin`, sign in with the same username and password configured in secrets, and verify metrics load.
 4. Confirm one analytics event appears in admin attribution/snapshot cards.
 
 ## Recommended architecture
@@ -56,7 +57,7 @@ After first successful deploy:
 - **Database/API origin**: Supabase/Railway Postgres + Next.js API routes
 - **Cloudflare role**: DNS, WAF, DDoS protection, caching, bot management, Turnstile
 
-> Why: this codebase uses Prisma in server routes and token-based admin auth, both supported cleanly with OpenNext on Cloudflare Workers.
+> Why: this codebase uses Prisma in server routes and password-based admin auth, both supported cleanly with OpenNext on Cloudflare Workers.
 
 ## 1) DNS + Proxy
 
@@ -109,7 +110,7 @@ In Cloudflare Turnstile:
 - Restrict origin access to Cloudflare only (firewall/IP allowlist where possible).
 - Keep API auth secrets server-side only.
 - Ensure no private keys are exposed in client env vars.
-- Set `ADMIN_TOKEN` as a secure Cloudflare secret.
+- Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` as secure Cloudflare secrets.
 
 ## 7) Monitoring / health checks
 
@@ -125,5 +126,5 @@ In Cloudflare Turnstile:
 - Home page loads via Cloudflare domain
 - `/api/health` returns `200` with `{ ok: true }`
 - Waitlist + investor forms succeed and are bot-protected
-- Admin auth works (`ADMIN_TOKEN` bearer auth)
+- Admin auth works (HTTP Basic with `ADMIN_USERNAME` / `ADMIN_PASSWORD`)
 - Analytics events appear in admin dashboard

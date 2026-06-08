@@ -22,5 +22,9 @@
   },
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://crow-vo.com",
+    "NEXT_PUBLIC_CROWVO_APP_URL": "https://app.crow-vo.com"
   }
 }

@@ -6,6 +6,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 FROM base AS deps
 COPY package*.json ./
+COPY prisma ./prisma
 RUN npm ci
 
 FROM base AS builder
@@ -25,6 +26,7 @@ CMD ["npm", "run", "start"]
 FROM base AS dev
 ENV NODE_ENV=development
 COPY package*.json ./
+COPY prisma ./prisma
 RUN npm ci
 COPY . .
 EXPOSE 3000

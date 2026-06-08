@@ -16,6 +16,54 @@
   ],
   "headers": [
     {
+      "source": "/admin",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "origin-when-cross-origin"
+        },
+        {
+          "key": "X-DNS-Prefetch-Control",
+          "value": "on"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://static.hotjar.com https://challenges.cloudflare.com; connect-src 'self' https://app.posthog.com https://*.hotjar.com https://*.hotjar.io https://challenges.cloudflare.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://challenges.cloudflare.com;"
+        }
+      ],
+      "regex": "^/admin(?:/)?$"
+    },
+    {
+      "source": "/api/admin/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0, must-revalidate"
+        }
+      ],
+      "regex": "^/api/admin(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
+    },
+    {
       "source": "/:path*",
       "headers": [
         {
@@ -89,16 +137,22 @@
       "namedRegex": "^/admin(?:/)?$"
     },
     {
+      "page": "/api/admin/access-codes",
+      "regex": "^/api/admin/access\\-codes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/access\\-codes(?:/)?$"
+    },
+    {
       "page": "/api/admin/overview",
       "regex": "^/api/admin/overview(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/admin/overview(?:/)?$"
     },
     {
-      "page": "/api/admin/waitlist",
-      "regex": "^/api/admin/waitlist(?:/)?$",
+      "page": "/api/admin/platform",
+      "regex": "^/api/admin/platform(?:/)?$",
       "routeKeys": {},
-      "namedRegex": "^/api/admin/waitlist(?:/)?$"
+      "namedRegex": "^/api/admin/platform(?:/)?$"
     },
     {
       "page": "/api/analytics/track",
@@ -113,22 +167,28 @@
       "namedRegex": "^/api/health(?:/)?$"
     },
     {
-      "page": "/api/investor-interest",
-      "regex": "^/api/investor\\-interest(?:/)?$",
+      "page": "/communities",
+      "regex": "^/communities(?:/)?$",
       "routeKeys": {},
-      "namedRegex": "^/api/investor\\-interest(?:/)?$"
+      "namedRegex": "^/communities(?:/)?$"
     },
     {
-      "page": "/api/referrals/leaderboard",
-      "regex": "^/api/referrals/leaderboard(?:/)?$",
+      "page": "/contact",
+      "regex": "^/contact(?:/)?$",
       "routeKeys": {},
-      "namedRegex": "^/api/referrals/leaderboard(?:/)?$"
+      "namedRegex": "^/contact(?:/)?$"
     },
     {
-      "page": "/api/waitlist",
-      "regex": "^/api/waitlist(?:/)?$",
+      "page": "/events",
+      "regex": "^/events(?:/)?$",
       "routeKeys": {},
-      "namedRegex": "^/api/waitlist(?:/)?$"
+      "namedRegex": "^/events(?:/)?$"
+    },
+    {
+      "page": "/faq",
+      "regex": "^/faq(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/faq(?:/)?$"
     },
     {
       "page": "/favicon.ico",
@@ -137,10 +197,34 @@
       "namedRegex": "^/favicon\\.ico(?:/)?$"
     },
     {
+      "page": "/features",
+      "regex": "^/features(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/features(?:/)?$"
+    },
+    {
       "page": "/investors",
       "regex": "^/investors(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/investors(?:/)?$"
+    },
+    {
+      "page": "/pricing",
+      "regex": "^/pricing(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/pricing(?:/)?$"
+    },
+    {
+      "page": "/safety",
+      "regex": "^/safety(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/safety(?:/)?$"
+    },
+    {
+      "page": "/waitlist",
+      "regex": "^/waitlist(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/waitlist(?:/)?$"
     }
   ],
   "dataRoutes": [],

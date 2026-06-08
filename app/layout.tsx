@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Crowvo | Private Social Communities That Drive Real Events",
+  title: "Crowvo | Communities first. People first. Privacy first.",
   description:
-    "Crowvo is a privacy-first social platform where communities chat, grow, and turn online energy into real-world events.",
+    "Crowvo is built for communities — not advertisers. Talk, organize, and grow together without algorithms, data selling, or endless noise.",
 };
 
 export default function RootLayout({
@@ -29,14 +29,10 @@ export default function RootLayout({
 }>) {
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   const hotjarId = process.env.NEXT_PUBLIC_HOTJAR_ID;
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="crowvo-mesh flex min-h-full flex-col">
         {gaId ? (
           <>
             <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />
@@ -56,9 +52,6 @@ export default function RootLayout({
               r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;a.appendChild(r);
             })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');`}
           </Script>
-        ) : null}
-        {turnstileSiteKey ? (
-          <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
         ) : null}
         <AnalyticsProvider />
         <Navbar />

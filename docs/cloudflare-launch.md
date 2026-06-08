@@ -26,7 +26,8 @@ Use this when creating/updating the Cloudflare project so deployment does not fa
 Set these in Cloudflare project settings before first deploy.
 
 - **Required secret**
-  - `DATABASE_URL`
+  - `DATABASE_URL` (Supabase transaction pooler, port 6543, `pgbouncer=true`)
+  - `DIRECT_URL` (Supabase session pooler, port 5432 — required by Prisma schema for builds)
   - `ADMIN_USERNAME`
   - `ADMIN_PASSWORD`
   - `CLOUDFLARE_TURNSTILE_SECRET`
@@ -50,6 +51,30 @@ After first successful deploy:
 2. Submit waitlist form once (valid Turnstile token).
 3. Open `/admin`, sign in with the same username and password configured in secrets, and verify metrics load.
 4. Confirm one analytics event appears in admin attribution/snapshot cards.
+
+**If `/admin` still shows the old single-token login:**
+
+- Deployments must rebuild the OpenNext bundle (`npm run cf:deploy` or your CI build). Older Workers/KV payloads will keep serving stale HTML until you redeploy.
+- Force-refresh (`Ctrl`+`Shift`+`R` / empty cache hard reload).
+- Clear site data for your domain if a service worker/browser cache persists.
+- In Cloudflare, confirm cache rules **bypass** `/admin*` and `/api/*` per the rules below — or **purge cache** for your hostname after deploying.
+
+### “Admin data query failed” / DATABASE_URL
+
+The admin APIs use Prisma with **network Postgres**. Your Workers runtime must use a **`DATABASE_URL` that resolves on the public internet**:
+
+- Wrong for production if it looks like **`@db:`** or **`localhost`** / **`127.0.0.1`** — that’s local/Docker Postgres and Workers cannot reach it.
+- Set **`DATABASE_URL` as a Cloudflare Workers secret** to your database — **never** reuse the Compose-only value from `.env` (`postgresql://...@db:5432/...`; Workers cannot resolve `db`).
+
+### Supabase (recommended)
+
+Use the **transaction mode / pooler** connection string (**port `6543`**) with **`pgbouncer=true`** so serverless/OpenNext opens fewer raw connections.
+
+- Paste that string into **`DATABASE_URL` Workers secret** (`wrangler secret put DATABASE_URL` or dashboard Secrets).
+- For local `npm run dev` outside Docker, put the **same string** into **`.env.local`** so it overrides the Docker `DATABASE_URL` in `.env`.
+- Applying schema: Supabase recommends a **direct** or **session** URI for tooling; temporarily run `DATABASE_URL="<session-or-direct-uri>" npx prisma db push` against the same Supabase project (official guide: [Supabase × Prisma](https://supabase.com/docs/guides/database/prisma)).
+
+For other hosts (Railway / Neon): set `DATABASE_URL` secret to whatever they provide as the pooled/serverless‑friendly URI, then run `DATABASE_URL="<prod-uri>" npx prisma db push` once against production.
 
 ## Recommended architecture
 

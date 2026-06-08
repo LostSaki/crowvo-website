@@ -1,39 +1,53 @@
 "use client";
 
-import { useCallback, useState } from "react";
-
-type WaitlistRow = {
-  id: string;
-  email: string;
-  inviteCode: string;
-  referralCode: string | null;
-  source: string | null;
-  createdAt: string;
-};
+import { useCallback, useEffect, useState } from "react";
+import { crowvoAppUrl } from "@/lib/app-url";
 
 type AdminData = {
-  waitlistCount: number;
-  investorCount: number;
-  latestWaitlist: WaitlistRow[];
-  topReferrers: { email: string; inviteCode: string; referrals: number }[];
   analytics: {
-    referralSignups: number;
-    directSignups: number;
-    estimatedConversionRate: number;
     pageViews: number;
     startHubClicks: number;
-    waitlistCtaClicks: number;
+    launchAppClicks: number;
     requestDeckClicks: number;
     topTrafficSources: { source: string; count: number }[];
   };
-  securityEvents: {
-    id: string;
-    time: string;
-    type: string;
-    severity: "info" | "low" | "medium" | "high";
-    detail: string;
-  }[];
 };
+
+type AccessCode = {
+  id: string;
+  code: string;
+  label: string | null;
+  note: string | null;
+  singleUse: boolean;
+  maxUses: number | null;
+  uses: number;
+  remainingUses: number | null;
+  expiresAt: string | null;
+  active: boolean;
+  createdByLabel: string | null;
+  createdAt: string;
+  redemptions: { id: string; redeemedAt: string; user: { id: string; username: string; email: string } }[];
+};
+
+type PlatformUser = {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string | null;
+  onboardingCompleted: boolean;
+  createdAt: string;
+  _count: { hubMembers: number; eventRsvps: number };
+};
+
+type AuditLog = {
+  id: string;
+  action: string;
+  actorLabel: string | null;
+  targetType: string | null;
+  createdAt: string;
+};
+
+type Tab = "overview" | "access-codes" | "users" | "audit" | "platform";
 
 function basicAuthorizationHeader(username: string, password: string) {
   const pair = `${username}:${password}`;
@@ -45,33 +59,31 @@ function basicAuthorizationHeader(username: string, password: string) {
   return `Basic ${btoa(binary)}`;
 }
 
+function authHeaders(user: string, pass: string) {
+  return { authorization: basicAuthorizationHeader(user, pass) };
+}
+
 export function AdminDashboard() {
-  const [username, setUsername] = useState(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-    return localStorage.getItem("crowvo-admin-user") ?? "";
-  });
-  const [password, setPassword] = useState(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-    return localStorage.getItem("crowvo-admin-pass") ?? "";
-  });
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isAuthed, setIsAuthed] = useState(false);
+  const [tab, setTab] = useState<Tab>("overview");
   const [data, setData] = useState<AdminData | null>(null);
+  const [codes, setCodes] = useState<AccessCode[]>([]);
+  const [users, setUsers] = useState<PlatformUser[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [platformStats, setPlatformStats] = useState<Record<string, number> | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const loadOverview = useCallback(async (user: string, pass: string) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/overview", {
-        headers: { authorization: basicAuthorizationHeader(user, pass) },
-      });
+      const response = await fetch("/api/admin/overview", { headers: authHeaders(user, pass) });
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error ?? "You are authenticated but not authorized as admin.");
+        throw new Error(payload?.error ?? "Could not load admin data.");
       }
       const payload = (await response.json()) as AdminData;
       setData(payload);
@@ -88,6 +100,57 @@ export function AdminDashboard() {
     }
   }, []);
 
+  const loadTab = useCallback(
+    async (nextTab: Tab, user: string, pass: string) => {
+      if (!isAuthed) return;
+      setLoading(true);
+      try {
+        if (nextTab === "access-codes") {
+          const res = await fetch("/api/admin/access-codes", { headers: authHeaders(user, pass) });
+          const payload = (await res.json()) as { codes?: AccessCode[]; error?: string };
+          if (!res.ok) throw new Error(payload.error ?? "Failed to load codes.");
+          setCodes(payload.codes ?? []);
+        } else if (nextTab === "users") {
+          const res = await fetch("/api/admin/platform?section=users", { headers: authHeaders(user, pass) });
+          const payload = (await res.json()) as { users?: PlatformUser[]; error?: string };
+          if (!res.ok) throw new Error(payload.error ?? "Failed to load users.");
+          setUsers(payload.users ?? []);
+        } else if (nextTab === "audit") {
+          const res = await fetch("/api/admin/platform?section=audit", { headers: authHeaders(user, pass) });
+          const payload = (await res.json()) as { logs?: AuditLog[]; error?: string };
+          if (!res.ok) throw new Error(payload.error ?? "Failed to load audit logs.");
+          setLogs(payload.logs ?? []);
+        } else if (nextTab === "platform") {
+          const res = await fetch("/api/admin/platform?section=stats", { headers: authHeaders(user, pass) });
+          const payload = (await res.json()) as Record<string, number> & { error?: string };
+          if (!res.ok) throw new Error(payload.error ?? "Failed to load platform stats.");
+          setPlatformStats(payload);
+        }
+        setError("");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Request failed.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [isAuthed],
+  );
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
+    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
+    setUsername(savedUser);
+    setPassword(savedPass);
+    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
+  }, [loadOverview]);
+
+  useEffect(() => {
+    if (!isAuthed) return;
+    const user = localStorage.getItem("crowvo-admin-user") ?? username;
+    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    if (tab !== "overview") void loadTab(tab, user, pass);
+  }, [tab, isAuthed, loadTab, username, password]);
+
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!username.trim() || !password) {
@@ -97,26 +160,35 @@ export function AdminDashboard() {
     await loadOverview(username.trim(), password);
   }
 
-  async function exportCsv() {
-    if (!isAuthed || !username.trim()) {
-      return;
+  async function createCode(singleUse: boolean) {
+    const user = localStorage.getItem("crowvo-admin-user") ?? username;
+    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    setCreating(true);
+    try {
+      const res = await fetch("/api/admin/access-codes", {
+        method: "POST",
+        headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
+        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: user }),
+      });
+      const payload = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(payload.error ?? "Create failed.");
+      await loadTab("access-codes", user, pass);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create code.");
+    } finally {
+      setCreating(false);
     }
-    const response = await fetch("/api/admin/waitlist", {
-      headers: { authorization: basicAuthorizationHeader(username.trim(), password) },
+  }
+
+  async function deactivateCode(id: string) {
+    const user = localStorage.getItem("crowvo-admin-user") ?? username;
+    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    await fetch(`/api/admin/access-codes?id=${id}`, {
+      method: "PATCH",
+      headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
+      body: JSON.stringify({ active: false }),
     });
-    if (!response.ok) {
-      setError("Failed to export CSV.");
-      return;
-    }
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "waitlist.csv";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    await loadTab("access-codes", user, pass);
   }
 
   function signOut() {
@@ -129,173 +201,159 @@ export function AdminDashboard() {
     setError("");
   }
 
+  const appUrl = crowvoAppUrl;
+  const joinUrl = `${appUrl}/join`;
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "overview", label: "Overview" },
+    { id: "access-codes", label: "Access Codes" },
+    { id: "users", label: "Users" },
+    { id: "platform", label: "Platform" },
+    { id: "audit", label: "Audit Logs" },
+  ];
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-12 sm:px-6">
-      <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/85">
+      <div className="glass-panel flex flex-wrap items-center justify-between gap-4 rounded-2xl p-4">
         <div>
-          <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-          <p className="text-sm text-muted">Password-protected analytics, referral growth, and login security monitoring.</p>
+          <h1 className="text-2xl font-semibold">Control Center</h1>
+          <p className="text-sm text-muted">Demo access, users, platform metrics, and audit trail.</p>
         </div>
         {!isAuthed ? (
           <form onSubmit={onSignIn} className="flex flex-wrap items-center gap-2">
-            <input
-              type="text"
-              autoComplete="username"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder="Username"
-              className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-white/20 dark:bg-black/30"
-            />
-            <input
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Password"
-              className="h-10 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-white/20 dark:bg-black/30"
-            />
-            <button
-              type="submit"
-              className="rounded-xl bg-gradient-to-r from-[#5865F2] to-[#7c5cff] px-4 py-2 text-sm font-semibold text-white"
-            >
-              Sign in
-            </button>
+            <input type="text" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" className="h-10 rounded-xl border border-border bg-surface-elevated px-3 text-sm" />
+            <input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="h-10 rounded-xl border border-border bg-surface-elevated px-3 text-sm" />
+            <button type="submit" className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white">Sign in</button>
           </form>
         ) : (
-          <button
-            onClick={signOut}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm dark:border-white/20 dark:bg-transparent"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-2">
+            <a href={appUrl} target="_blank" rel="noopener noreferrer" className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white">Launch App</a>
+            <button onClick={signOut} className="rounded-xl border border-border px-4 py-2 text-sm">Sign out</button>
+          </div>
         )}
       </div>
 
-      {loading ? <p className="text-sm text-muted">Loading...</p> : null}
+      {isAuthed ? (
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((t) => (
+            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {loading ? <p className="text-sm text-muted">Loading…</p> : null}
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
 
-      {data ? (
+      {isAuthed && tab === "overview" && data ? (
         <>
-          <section className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
-              <p className="text-xs text-muted">Total waitlist users</p>
-              <p className="mt-1 text-2xl font-semibold">{data.waitlistCount}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
-              <p className="text-xs text-muted">Investor leads</p>
-              <p className="mt-1 text-2xl font-semibold">{data.investorCount}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
-              <p className="text-xs text-muted">Export waitlist</p>
-              <button onClick={exportCsv} className="mt-2 text-sm text-indigo-600 dark:text-indigo-300">
-                Download CSV
-              </button>
-            </div>
-          </section>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
-              <h2 className="text-lg font-semibold">Top referrers</h2>
-              <ul className="mt-3 space-y-2 text-sm">
-                {data.topReferrers.map((item) => (
-                  <li
-                    key={item.inviteCode}
-                    className="flex items-center justify-between rounded-lg border border-slate-200/70 bg-white/70 p-2 dark:border-white/10 dark:bg-transparent"
-                  >
-                    <span>{item.email}</span>
-                    <span className="text-indigo-600 dark:text-indigo-300">{item.referrals} referrals</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
-              <h2 className="text-lg font-semibold">Analytics Snapshot</h2>
-              <div className="mt-3 space-y-2 text-sm">
-                <p className="flex items-center justify-between">
-                  <span className="text-muted">Page views</span>
-                  <span className="font-medium">{data.analytics.pageViews}</span>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="text-muted">Referral signups</span>
-                  <span className="font-medium">{data.analytics.referralSignups}</span>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="text-muted">Direct signups</span>
-                  <span className="font-medium">{data.analytics.directSignups}</span>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="text-muted">Investor conversion</span>
-                  <span className="font-medium">{data.analytics.estimatedConversionRate}%</span>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="text-muted">Start hub clicks</span>
-                  <span className="font-medium">{data.analytics.startHubClicks}</span>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="text-muted">Waitlist CTA clicks</span>
-                  <span className="font-medium">{data.analytics.waitlistCtaClicks}</span>
-                </p>
-                <p className="flex items-center justify-between">
-                  <span className="text-muted">Request deck clicks</span>
-                  <span className="font-medium">{data.analytics.requestDeckClicks}</span>
-                </p>
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Page views", data.analytics.pageViews],
+              ["Launch app clicks", data.analytics.startHubClicks],
+              ["Investor brief clicks", data.analytics.requestDeckClicks],
+              ["Traffic sources", data.analytics.topTrafficSources.length],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="glass-panel rounded-2xl p-4">
+                <p className="text-xs text-muted">{label}</p>
+                <p className="mt-1 text-2xl font-semibold">{value}</p>
               </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
-              <h2 className="text-lg font-semibold">Security Log</h2>
-              <ul className="mt-3 space-y-2 text-sm">
-                {data.securityEvents.map((event) => (
-                  <li
-                    key={event.id}
-                    className="rounded-lg border border-slate-200/70 bg-white/70 p-2 dark:border-white/10 dark:bg-transparent"
-                  >
-                    <p className="font-medium capitalize">{event.type.replace("-", " ")}</p>
-                    <p className="text-xs text-muted">{event.detail}</p>
-                    <p className="mt-1 text-[11px] text-muted">{new Date(event.time).toLocaleString()}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            ))}
           </section>
-
-          <section className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
-            <h2 className="text-lg font-semibold">Attribution Sources</h2>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-              {data.analytics.topTrafficSources.map((source) => (
-                <div
-                  key={source.source}
-                  className="rounded-lg border border-slate-200/70 bg-white/70 p-3 text-sm dark:border-white/10 dark:bg-transparent"
-                >
-                  <p className="font-medium capitalize">{source.source}</p>
-                  <p className="text-xs text-muted">{source.count} events</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm dark:border-white/15 dark:bg-[#151a2b]/70">
-              <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-slate-200/80 text-xs text-muted dark:border-white/10">
-                  <tr>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Invite</th>
-                    <th className="px-4 py-3">Referred By</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.latestWaitlist.map((userRow) => (
-                    <tr key={userRow.id} className="border-b border-slate-200/70 dark:border-white/5">
-                      <td className="px-4 py-3">{userRow.email}</td>
-                      <td className="px-4 py-3 text-muted">{userRow.inviteCode}</td>
-                      <td className="px-4 py-3 text-muted">{userRow.referralCode ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <section className="glass-panel rounded-2xl p-4">
+            <h2 className="text-lg font-semibold">Demo signup link</h2>
+            <p className="mt-1 text-sm text-muted">Share this with invited testers after generating access codes.</p>
+            <code className="mt-3 block overflow-x-auto rounded-lg bg-surface-elevated px-3 py-2 text-sm">{joinUrl}</code>
           </section>
         </>
+      ) : null}
+
+      {isAuthed && tab === "access-codes" ? (
+        <section className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={creating} onClick={() => void createCode(false)} className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">Generate multi-use code</button>
+            <button type="button" disabled={creating} onClick={() => void createCode(true)} className="rounded-xl border border-border px-4 py-2 text-sm">Generate single-use code</button>
+          </div>
+          <div className="space-y-3">
+            {codes.map((code) => (
+              <div key={code.id} className="glass-panel rounded-2xl p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-mono text-lg">{code.code}</p>
+                    <p className="text-sm text-muted">{code.label ?? "Untitled"} · {code.active ? "Active" : "Deactivated"}</p>
+                    {code.note ? <p className="mt-1 text-xs text-muted">{code.note}</p> : null}
+                  </div>
+                  <div className="text-right text-sm">
+                    <p>{code.uses} used{code.remainingUses != null ? ` · ${code.remainingUses} left` : ""}</p>
+                    {code.expiresAt ? <p className="text-xs text-muted">Expires {new Date(code.expiresAt).toLocaleDateString()}</p> : null}
+                    {code.active ? (
+                      <button type="button" onClick={() => void deactivateCode(code.id)} className="mt-2 text-xs text-red-300 hover:underline">Deactivate</button>
+                    ) : null}
+                  </div>
+                </div>
+                {code.redemptions.length > 0 ? (
+                  <ul className="mt-3 space-y-1 border-t border-border pt-3 text-xs text-muted">
+                    {code.redemptions.map((r) => (
+                      <li key={r.id}>@{r.user.username} · {new Date(r.redeemedAt).toLocaleString()}</li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {isAuthed && tab === "users" ? (
+        <section className="glass-panel overflow-x-auto rounded-2xl p-4">
+          <table className="w-full text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-muted">
+              <tr>
+                <th className="pb-2">User</th>
+                <th className="pb-2">Onboarding</th>
+                <th className="pb-2">Hubs</th>
+                <th className="pb-2">RSVPs</th>
+                <th className="pb-2">Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => (
+                <tr key={u.id} className="border-t border-border">
+                  <td className="py-2">@{u.username}<br /><span className="text-xs text-muted">{u.email}</span></td>
+                  <td className="py-2">{u.onboardingCompleted ? "Complete" : "Pending"}</td>
+                  <td className="py-2">{u._count.hubMembers}</td>
+                  <td className="py-2">{u._count.eventRsvps}</td>
+                  <td className="py-2 text-xs text-muted">{new Date(u.createdAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      ) : null}
+
+      {isAuthed && tab === "platform" && platformStats ? (
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {Object.entries(platformStats)
+            .filter(([key]) => key !== "error")
+            .map(([key, value]) => (
+              <div key={key} className="glass-panel rounded-2xl p-4">
+                <p className="text-xs capitalize text-muted">{key.replace(/([A-Z])/g, " $1")}</p>
+                <p className="mt-1 text-2xl font-semibold">{value}</p>
+              </div>
+            ))}
+        </section>
+      ) : null}
+
+      {isAuthed && tab === "audit" ? (
+        <section className="glass-panel space-y-2 rounded-2xl p-4">
+          {logs.map((log) => (
+            <div key={log.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2 text-sm last:border-0">
+              <span className="font-medium">{log.action}</span>
+              <span className="text-xs text-muted">{log.actorLabel ?? "system"} · {new Date(log.createdAt).toLocaleString()}</span>
+            </div>
+          ))}
+        </section>
       ) : null}
     </div>
   );

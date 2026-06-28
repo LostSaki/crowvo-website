@@ -2,17 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 type LeaderboardEntry = {
-  email: string;
-  inviteCode: string;
   _count: { referrals: number };
 };
 
 export async function GET() {
   const leaders = await prisma.waitlistSignup.findMany({
     select: {
-      id: true,
-      email: true,
-      inviteCode: true,
       _count: {
         select: {
           referrals: true,
@@ -30,8 +25,7 @@ export async function GET() {
   return NextResponse.json({
     leaders: leaders.map((entry: LeaderboardEntry, index: number) => ({
       rank: index + 1,
-      email: entry.email,
-      inviteCode: entry.inviteCode,
+      displayName: `Ambassador #${index + 1}`,
       referrals: entry._count.referrals,
     })),
   });

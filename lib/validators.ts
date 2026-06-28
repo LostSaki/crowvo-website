@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+const analyticsMetadataValueSchema = z.union([
+  z.string().max(500),
+  z.number().finite(),
+  z.boolean(),
+  z.null(),
+]);
+
 export const waitlistSchema = z.object({
   email: z.email().min(5).max(120),
   referralCode: z.string().trim().max(60).optional(),
@@ -24,5 +31,8 @@ export const analyticsTrackSchema = z.object({
   utmMedium: z.string().trim().max(120).optional(),
   utmCampaign: z.string().trim().max(160).optional(),
   sessionId: z.string().trim().max(120).optional(),
-  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+  metadata: z
+    .record(z.string().trim().min(1).max(64), analyticsMetadataValueSchema)
+    .refine((metadata) => Object.keys(metadata).length <= 20, "Metadata is too large.")
+    .optional(),
 });

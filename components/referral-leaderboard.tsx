@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 
 type Leader = {
   rank: number;
-  email: string;
-  inviteCode: string;
+  displayName: string;
   referrals: number;
 };
 
@@ -30,11 +29,11 @@ export function ReferralLeaderboard() {
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {leaders.slice(0, 6).map((leader) => (
           <div
-            key={leader.inviteCode}
+            key={leader.rank}
             className="rounded-xl border border-slate-200/70 bg-white/70 p-3 text-sm dark:border-white/10 dark:bg-transparent"
           >
             <p className="text-indigo-500 dark:text-indigo-300">#{leader.rank}</p>
-            <p>{leader.email}</p>
+            <p>{leader.displayName}</p>
             <p className="text-muted">{leader.referrals} successful referrals</p>
           </div>
         ))}

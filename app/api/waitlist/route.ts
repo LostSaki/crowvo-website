@@ -38,8 +38,6 @@ export async function POST(request: NextRequest) {
     if (existing) {
       return NextResponse.json({
         message: "You're already on the waitlist.",
-        inviteCode: existing.inviteCode,
-        referralLink: `${request.nextUrl.origin}/?ref=${existing.inviteCode}`,
       });
     }
 

@@ -22,6 +22,14 @@ const fallbackRateLimit = (
   return { success: true, remaining: maxRequests - validHits.length, retryAfterSec: 0 };
 };
 
+const blockedRateLimit = (
+  windowMs: number,
+): { success: boolean; remaining: number; retryAfterSec: number } => ({
+  success: false,
+  remaining: 0,
+  retryAfterSec: Math.ceil(windowMs / 1000),
+});
+
 export async function limitRequests(
   key: string,
   maxRequests = 8,
@@ -29,6 +37,11 @@ export async function limitRequests(
 ): Promise<{ success: boolean; remaining: number; retryAfterSec: number }> {
   const ratelimit = createRatelimit("hubly-ratelimit", maxRequests, `${Math.ceil(windowMs / 1000)} s`);
   if (!ratelimit) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("Distributed rate-limit is unavailable; blocking protected request.");
+      return blockedRateLimit(windowMs);
+    }
+
     return fallbackRateLimit(key, maxRequests, windowMs);
   }
 
@@ -40,6 +53,11 @@ export async function limitRequests(
       retryAfterSec: result.reset ? Math.max(0, Math.ceil((result.reset - Date.now()) / 1000)) : 0,
     };
   } catch (error) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("Distributed rate-limit failed; blocking protected request.", error);
+      return blockedRateLimit(windowMs);
+    }
+
     console.error("Distributed rate-limit failed; falling back to local limiter.", error);
     return fallbackRateLimit(key, maxRequests, windowMs);
   }

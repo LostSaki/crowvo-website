@@ -4,7 +4,13 @@ type TurnstileResponse = {
 };
 
 export async function verifyTurnstileToken(token?: string, ip?: string) {
-  if (!process.env.CLOUDFLARE_TURNSTILE_SECRET) {
+  const secret = process.env.CLOUDFLARE_TURNSTILE_SECRET;
+  if (!secret) {
+    const turnstileIsUnconfigured =
+      process.env.NODE_ENV !== "production" && !process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (!turnstileIsUnconfigured) {
+      return { success: false, errors: ["missing-input-secret"] };
+    }
     return { success: true, errors: [] as string[] };
   }
 
@@ -13,7 +19,7 @@ export async function verifyTurnstileToken(token?: string, ip?: string) {
   }
 
   const body = new URLSearchParams();
-  body.set("secret", process.env.CLOUDFLARE_TURNSTILE_SECRET);
+  body.set("secret", secret);
   body.set("response", token);
   if (ip) {
     body.set("remoteip", ip);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin-auth";
+import { AdminAuthError, requireAdmin } from "@/lib/admin-auth";
 
 type TopReferrer = {
   email: string;
@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
     await requireAdmin(request);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unauthorized";
-    return NextResponse.json({ error: message }, { status: 401 });
+    const status = error instanceof AdminAuthError ? error.status : 401;
+    return NextResponse.json({ error: message }, { status });
   }
 
   let waitlistCount = 0;

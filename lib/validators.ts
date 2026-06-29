@@ -1,9 +1,15 @@
 import { z } from "zod";
 
+const MAX_WAITLIST_SOURCE_LENGTH = 500;
+
 export const waitlistSchema = z.object({
   email: z.email().min(5).max(120),
   referralCode: z.string().trim().max(60).optional(),
-  source: z.string().trim().max(80).optional(),
+  source: z
+    .string()
+    .trim()
+    .transform((value) => value.slice(0, MAX_WAITLIST_SOURCE_LENGTH))
+    .optional(),
   turnstileToken: z.string().trim().min(1).optional(),
 });
 

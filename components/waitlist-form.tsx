@@ -9,9 +9,18 @@ export function WaitlistForm() {
   const hasTurnstile = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
   const [email, setEmail] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetSignal, setTurnstileResetSignal] = useState(0);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [referralLink, setReferralLink] = useState("");
+
+  function resetTurnstile() {
+    if (!hasTurnstile) {
+      return;
+    }
+    setTurnstileToken("");
+    setTurnstileResetSignal((signal) => signal + 1);
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,6 +55,8 @@ export function WaitlistForm() {
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Something went wrong.");
+    } finally {
+      resetTurnstile();
     }
   }
 
@@ -79,7 +90,7 @@ export function WaitlistForm() {
       </div>
       {hasTurnstile ? (
         <div className="mt-3">
-          <TurnstileWidget onToken={setTurnstileToken} />
+          <TurnstileWidget onToken={setTurnstileToken} resetSignal={turnstileResetSignal} />
         </div>
       ) : null}
       {message ? (

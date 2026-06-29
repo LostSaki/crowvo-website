@@ -66,12 +66,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (resend && process.env.RESEND_FROM_EMAIL) {
-      await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL,
-        to: email,
-        subject: "You're on the Hubly waitlist",
-        html: "<p>Thanks for joining Hubly early access. We'll share your invite soon.</p>",
-      });
+      try {
+        await resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL,
+          to: email,
+          subject: "You're on the Hubly waitlist",
+          html: "<p>Thanks for joining Hubly early access. We'll share your invite soon.</p>",
+        });
+      } catch (error) {
+        console.error("Failed to send waitlist confirmation email", error);
+      }
     }
 
     return NextResponse.json(

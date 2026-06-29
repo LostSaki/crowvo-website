@@ -8,8 +8,17 @@ import { trackEvent } from "@/lib/analytics-client";
 export function InvestorForm() {
   const hasTurnstile = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetSignal, setTurnstileResetSignal] = useState(0);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+
+  function resetTurnstile() {
+    if (!hasTurnstile) {
+      return;
+    }
+    setTurnstileToken("");
+    setTurnstileResetSignal((signal) => signal + 1);
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,6 +45,8 @@ export function InvestorForm() {
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Unexpected error.");
+    } finally {
+      resetTurnstile();
     }
   }
 
@@ -84,7 +95,7 @@ export function InvestorForm() {
       >
         {status === "loading" ? "Submitting..." : "Request Investor Brief"}
       </button>
-      {hasTurnstile ? <TurnstileWidget onToken={setTurnstileToken} /> : null}
+      {hasTurnstile ? <TurnstileWidget onToken={setTurnstileToken} resetSignal={turnstileResetSignal} /> : null}
       {message ? (
         <p className={`text-sm ${status === "error" ? "text-red-500 dark:text-red-300" : "text-emerald-600 dark:text-emerald-300"}`}>
           {message}

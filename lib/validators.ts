@@ -1,7 +1,12 @@
 import { z } from "zod";
 
+const normalizedEmailSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim().toLowerCase() : value),
+  z.email().min(5).max(120),
+);
+
 export const waitlistSchema = z.object({
-  email: z.email().min(5).max(120),
+  email: normalizedEmailSchema,
   referralCode: z.string().trim().max(60).optional(),
   source: z.string().trim().max(80).optional(),
   turnstileToken: z.string().trim().min(1).optional(),
@@ -9,7 +14,7 @@ export const waitlistSchema = z.object({
 
 export const investorSchema = z.object({
   name: z.string().trim().min(2).max(80),
-  email: z.email().min(5).max(120),
+  email: normalizedEmailSchema,
   company: z.string().trim().min(2).max(120),
   checkSize: z.string().trim().max(80).optional(),
   message: z.string().trim().min(10).max(1200),

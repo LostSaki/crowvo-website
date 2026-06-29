@@ -34,7 +34,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Bot verification failed." }, { status: 400 });
     }
 
-    const existing = await prisma.waitlistSignup.findUnique({ where: { email } });
+    const existing = await prisma.waitlistSignup.findFirst({
+      where: { email: { equals: email, mode: "insensitive" } },
+    });
     if (existing) {
       return NextResponse.json({
         message: "You're already on the waitlist.",

@@ -14,7 +14,8 @@ function escapeCsv(value: string | null) {
   if (!value) {
     return "";
   }
-  return `"${value.replace(/"/g, '""')}"`;
+  const safeValue = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  return `"${safeValue.replace(/"/g, '""')}"`;
 }
 
 export async function GET(request: NextRequest) {

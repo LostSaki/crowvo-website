@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type WaitlistRow = {
   id: string;
@@ -52,16 +52,15 @@ export function AdminDashboard() {
     }
     return localStorage.getItem("crowvo-admin-user") ?? "";
   });
-  const [password, setPassword] = useState(() => {
-    if (typeof window === "undefined") {
-      return "";
-    }
-    return localStorage.getItem("crowvo-admin-pass") ?? "";
-  });
+  const [password, setPassword] = useState("");
   const [isAuthed, setIsAuthed] = useState(false);
   const [data, setData] = useState<AdminData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    localStorage.removeItem("crowvo-admin-pass");
+  }, []);
 
   const loadOverview = useCallback(async (user: string, pass: string) => {
     setLoading(true);
@@ -78,7 +77,7 @@ export function AdminDashboard() {
       setError("");
       setIsAuthed(true);
       localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
+      localStorage.removeItem("crowvo-admin-pass");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);

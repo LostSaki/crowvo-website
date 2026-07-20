@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import { isValidAccessCodeId } from "@/lib/access-code-id";
 import { crowvoAdminFetch } from "@/lib/crowvo-admin-api";
 
 async function guard(request: NextRequest) {
@@ -50,9 +51,15 @@ export async function PATCH(request: NextRequest) {
   if (denied) return denied;
   const id = request.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required." }, { status: 400 });
+  if (!isValidAccessCodeId(id)) {
+    return NextResponse.json({ error: "Invalid access code id." }, { status: 400 });
+  }
   try {
     const body = await request.json();
-    const res = await crowvoAdminFetch(`/access-codes/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+    const res = await crowvoAdminFetch(`/access-codes/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
     const payload = await res.json();
     if (!res.ok) return NextResponse.json(payload, { status: res.status });
     return NextResponse.json(payload);

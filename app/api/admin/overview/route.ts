@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Admin analytics query failed.", error);
-    return NextResponse.json({ error: "Analytics query failed." }, { status: 500 });
   }
 
   const pageViews = recentEvents.filter((event) => event.eventName === "page_view").length;

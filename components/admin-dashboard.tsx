@@ -142,7 +142,6 @@ export function AdminDashboard() {
     // Hydrate browser-stored admin credentials after the client mounts.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setUsername(savedUser);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPassword(savedPass);
     if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
   }, [loadOverview]);

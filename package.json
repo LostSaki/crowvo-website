@@ -21,7 +21,7 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
     "framer-motion": "^12.38.0",
-    "next": "16.2.4",
+    "next": "^16.2.12",
     "posthog-js": "^1.372.1",
     "prisma": "^6.19.3",
     "react": "19.2.4",
@@ -36,7 +36,7 @@
     "@types/react-dom": "^19",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
-    "eslint-config-next": "16.2.4",
+    "eslint-config-next": "^16.2.12",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.85.0"

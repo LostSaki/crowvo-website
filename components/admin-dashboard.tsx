@@ -139,6 +139,8 @@ export function AdminDashboard() {
   useEffect(() => {
     const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
     const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
+    // Hydrate browser-stored admin credentials after the client mounts.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUsername(savedUser);
     setPassword(savedPass);
     if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
@@ -148,6 +150,8 @@ export function AdminDashboard() {
     if (!isAuthed) return;
     const user = localStorage.getItem("crowvo-admin-user") ?? username;
     const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    // Tab data must be fetched when the selected admin tab changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tab !== "overview") void loadTab(tab, user, pass);
   }, [tab, isAuthed, loadTab, username, password]);
 

@@ -166,17 +166,20 @@ export function AdminDashboard() {
   useEffect(() => {
     const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
     const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
+    queueMicrotask(() => {
+      setUsername(savedUser);
+      setPassword(savedPass);
+      if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
+    });
   }, [loadOverview]);
 
-  useEffect(() => {
-    if (!isAuthed) return;
+  function selectTab(nextTab: Tab) {
+    setTab(nextTab);
+    if (!isAuthed || nextTab === "overview") return;
     const user = localStorage.getItem("crowvo-admin-user") ?? username;
     const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
-  }, [tab, isAuthed, loadTab, username, password]);
+    void loadTab(nextTab, user, pass);
+  }
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -264,7 +267,7 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button key={t.id} type="button" onClick={() => selectTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
               {t.label}
             </button>
           ))}

@@ -47,7 +47,26 @@ type AuditLog = {
   createdAt: string;
 };
 
-type Tab = "overview" | "access-codes" | "users" | "audit" | "platform";
+type WaitlistLead = {
+  id: string;
+  email: string;
+  inviteCode: string;
+  referralCode: string | null;
+  source: string | null;
+  createdAt: string;
+};
+
+type InvestorLead = {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  checkSize: string | null;
+  message: string;
+  createdAt: string;
+};
+
+type Tab = "overview" | "leads" | "access-codes" | "users" | "audit" | "platform";
 
 function basicAuthorizationHeader(username: string, password: string) {
   const pair = `${username}:${password}`;
@@ -72,6 +91,8 @@ export function AdminDashboard() {
   const [codes, setCodes] = useState<AccessCode[]>([]);
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [waitlistLeads, setWaitlistLeads] = useState<WaitlistLead[]>([]);
+  const [investorLeads, setInvestorLeads] = useState<InvestorLead[]>([]);
   const [platformStats, setPlatformStats] = useState<Record<string, number> | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -110,6 +131,12 @@ export function AdminDashboard() {
           const payload = (await res.json()) as { codes?: AccessCode[]; error?: string };
           if (!res.ok) throw new Error(payload.error ?? "Failed to load codes.");
           setCodes(payload.codes ?? []);
+        } else if (nextTab === "leads") {
+          const res = await fetch("/api/admin/leads", { headers: authHeaders(user, pass) });
+          const payload = (await res.json()) as { waitlist?: WaitlistLead[]; investors?: InvestorLead[]; error?: string };
+          if (!res.ok) throw new Error(payload.error ?? "Failed to load leads.");
+          setWaitlistLeads(payload.waitlist ?? []);
+          setInvestorLeads(payload.investors ?? []);
         } else if (nextTab === "users") {
           const res = await fetch("/api/admin/platform?section=users", { headers: authHeaders(user, pass) });
           const payload = (await res.json()) as { users?: PlatformUser[]; error?: string };
@@ -139,17 +166,20 @@ export function AdminDashboard() {
   useEffect(() => {
     const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
     const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
+    queueMicrotask(() => {
+      setUsername(savedUser);
+      setPassword(savedPass);
+      if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
+    });
   }, [loadOverview]);
 
-  useEffect(() => {
-    if (!isAuthed) return;
+  function selectTab(nextTab: Tab) {
+    setTab(nextTab);
+    if (!isAuthed || nextTab === "overview") return;
     const user = localStorage.getItem("crowvo-admin-user") ?? username;
     const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
-  }, [tab, isAuthed, loadTab, username, password]);
+    void loadTab(nextTab, user, pass);
+  }
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -206,6 +236,7 @@ export function AdminDashboard() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "overview", label: "Overview" },
+    { id: "leads", label: "Leads" },
     { id: "access-codes", label: "Access Codes" },
     { id: "users", label: "Users" },
     { id: "platform", label: "Platform" },
@@ -236,7 +267,7 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button key={t.id} type="button" onClick={() => selectTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
               {t.label}
             </button>
           ))}
@@ -301,6 +332,71 @@ export function AdminDashboard() {
                 ) : null}
               </div>
             ))}
+          </div>
+        </section>
+      ) : null}
+
+      {isAuthed && tab === "leads" ? (
+        <section className="grid gap-4 lg:grid-cols-2">
+          <div className="glass-panel overflow-x-auto rounded-2xl p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Waitlist leads</h2>
+              <span className="text-sm text-muted">{waitlistLeads.length} total</span>
+            </div>
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th className="pb-2">Email</th>
+                  <th className="pb-2">Invite</th>
+                  <th className="pb-2">Source</th>
+                  <th className="pb-2">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {waitlistLeads.map((lead) => (
+                  <tr key={lead.id} className="border-t border-border">
+                    <td className="py-2">{lead.email}</td>
+                    <td className="py-2 font-mono text-xs">{lead.inviteCode}</td>
+                    <td className="py-2">
+                      {lead.source ?? "direct"}
+                      {lead.referralCode ? <span className="block text-xs text-muted">ref: {lead.referralCode}</span> : null}
+                    </td>
+                    <td className="py-2 text-xs text-muted">{new Date(lead.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="glass-panel overflow-x-auto rounded-2xl p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Investor leads</h2>
+              <span className="text-sm text-muted">{investorLeads.length} total</span>
+            </div>
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th className="pb-2">Contact</th>
+                  <th className="pb-2">Company</th>
+                  <th className="pb-2">Message</th>
+                  <th className="pb-2">Check</th>
+                  <th className="pb-2">Submitted</th>
+                </tr>
+              </thead>
+              <tbody>
+                {investorLeads.map((lead) => (
+                  <tr key={lead.id} className="border-t border-border align-top">
+                    <td className="py-2">
+                      {lead.name}<br />
+                      <span className="text-xs text-muted">{lead.email}</span>
+                    </td>
+                    <td className="py-2">{lead.company}</td>
+                    <td className="max-w-xs py-2 text-xs text-muted">{lead.message}</td>
+                    <td className="py-2">{lead.checkSize ?? "n/a"}</td>
+                    <td className="py-2 text-xs text-muted">{new Date(lead.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       ) : null}

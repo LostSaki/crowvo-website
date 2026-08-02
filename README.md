@@ -1,5 +1,7 @@
 # Crowvo Marketing Site
 
+**Live site:** [crow-vo.com](https://crow-vo.com/)
+
 Brand: **Crowvo**  
 Tagline: **"Social communities first, events built in."**  
 Short copy: **Build private hubs, chat daily, and turn momentum into real-world attendance.**

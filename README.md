@@ -49,7 +49,7 @@ Production-ready startup marketing website built with:
    - Optional analytics + email keys
 4. Generate Prisma client:
    - `npm run prisma:generate`
-5. Push schema:
+5. Push schema locally or against a deliberately selected database:
    - `npm run prisma:push`
 6. Start dev server:
    - `npm run dev`
@@ -119,6 +119,12 @@ Notes:
   - `.\start-docker.ps1 -Mode prod`
 - Stop:
   - `.\start-docker.ps1 -Down`
+
+### Supabase helper script
+
+- `npm run setup:db` writes `.env.local` for local development only.
+- To intentionally push the current Prisma schema and update Cloudflare Worker secrets for the selected remote project, run:
+  - `powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/setup-supabase-db.ps1 -ApplyRemoteChanges`
 
 ## Growth Features
 

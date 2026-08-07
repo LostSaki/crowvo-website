@@ -89,8 +89,8 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
-      localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
+      localStorage.removeItem("crowvo-admin-user");
+      localStorage.removeItem("crowvo-admin-pass");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
@@ -137,18 +137,17 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
-    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
-  }, [loadOverview]);
+    localStorage.removeItem("crowvo-admin-user");
+    localStorage.removeItem("crowvo-admin-pass");
+  }, []);
 
   useEffect(() => {
     if (!isAuthed) return;
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
+    if (tab === "overview") return;
+    const timeout = window.setTimeout(() => {
+      void loadTab(tab, username, password);
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [tab, isAuthed, loadTab, username, password]);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
@@ -157,22 +156,22 @@ export function AdminDashboard() {
       setError("Enter your admin username and password.");
       return;
     }
-    await loadOverview(username.trim(), password);
+    const trimmedUsername = username.trim();
+    setUsername(trimmedUsername);
+    await loadOverview(trimmedUsername, password);
   }
 
   async function createCode(singleUse: boolean) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
     setCreating(true);
     try {
       const res = await fetch("/api/admin/access-codes", {
         method: "POST",
-        headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
-        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: user }),
+        headers: { ...authHeaders(username, password), "Content-Type": "application/json" },
+        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: username }),
       });
       const payload = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(payload.error ?? "Create failed.");
-      await loadTab("access-codes", user, pass);
+      await loadTab("access-codes", username, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create code.");
     } finally {
@@ -181,14 +180,12 @@ export function AdminDashboard() {
   }
 
   async function deactivateCode(id: string) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
     await fetch(`/api/admin/access-codes?id=${id}`, {
       method: "PATCH",
-      headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
+      headers: { ...authHeaders(username, password), "Content-Type": "application/json" },
       body: JSON.stringify({ active: false }),
     });
-    await loadTab("access-codes", user, pass);
+    await loadTab("access-codes", username, password);
   }
 
   function signOut() {
@@ -213,7 +210,7 @@ export function AdminDashboard() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-12 sm:px-6">
+    <div data-hj-suppress="" data-ph-no-capture="" className="mx-auto max-w-6xl space-y-6 px-4 py-12 sm:px-6">
       <div className="glass-panel flex flex-wrap items-center justify-between gap-4 rounded-2xl p-4">
         <div>
           <h1 className="text-2xl font-semibold">Control Center</h1>

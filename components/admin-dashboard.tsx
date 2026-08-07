@@ -72,7 +72,10 @@ function authHeaders(user: string, pass: string) {
 }
 
 export function AdminDashboard() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(ADMIN_USER_STORAGE_KEY) ?? "";
+  });
   const [password, setPassword] = useState("");
   const [isAuthed, setIsAuthed] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
@@ -98,6 +101,7 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
+      setTab("overview");
       setSession({ username: user, password: pass });
       setPassword("");
       localStorage.setItem(ADMIN_USER_STORAGE_KEY, user);
@@ -149,15 +153,8 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem(ADMIN_USER_STORAGE_KEY) ?? "";
-    setUsername(savedUser);
     localStorage.removeItem(LEGACY_ADMIN_PASS_STORAGE_KEY);
   }, []);
-
-  useEffect(() => {
-    if (!isAuthed || !session) return;
-    if (tab !== "overview") void loadTab(tab, session.username, session.password);
-  }, [tab, isAuthed, loadTab, session]);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -166,6 +163,16 @@ export function AdminDashboard() {
       return;
     }
     await loadOverview(username.trim(), password);
+  }
+
+  async function selectTab(nextTab: Tab) {
+    setTab(nextTab);
+    if (nextTab === "overview") return;
+    if (!session) {
+      setError("Sign in again to load admin data.");
+      return;
+    }
+    await loadTab(nextTab, session.username, session.password);
   }
 
   async function createCode(singleUse: boolean) {
@@ -211,6 +218,7 @@ export function AdminDashboard() {
     setSession(null);
     setData(null);
     setIsAuthed(false);
+    setTab("overview");
     setError("");
   }
 
@@ -249,7 +257,7 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button key={t.id} type="button" onClick={() => void selectTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
               {t.label}
             </button>
           ))}

@@ -63,8 +63,15 @@ function authHeaders(user: string, pass: string) {
   return { authorization: basicAuthorizationHeader(user, pass) };
 }
 
+function savedAdminUsername() {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  return localStorage.getItem("crowvo-admin-user") ?? "";
+}
+
 export function AdminDashboard() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(savedAdminUsername);
   const [password, setPassword] = useState("");
   const [isAuthed, setIsAuthed] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
@@ -138,15 +145,8 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
     localStorage.removeItem("crowvo-admin-pass");
-    setUsername(savedUser);
   }, []);
-
-  useEffect(() => {
-    if (!isAuthed) return;
-    if (tab !== "overview") void loadTab(tab, username, password);
-  }, [tab, isAuthed, loadTab, username, password]);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -186,6 +186,11 @@ export function AdminDashboard() {
       body: JSON.stringify({ active: false }),
     });
     await loadTab("access-codes", user, pass);
+  }
+
+  function selectTab(nextTab: Tab) {
+    setTab(nextTab);
+    if (nextTab !== "overview") void loadTab(nextTab, username, password);
   }
 
   function signOut() {
@@ -233,7 +238,7 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button key={t.id} type="button" onClick={() => selectTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
               {t.label}
             </button>
           ))}

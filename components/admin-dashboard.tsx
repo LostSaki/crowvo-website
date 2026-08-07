@@ -64,7 +64,10 @@ function authHeaders(user: string, pass: string) {
 }
 
 export function AdminDashboard() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("crowvo-admin-user") ?? "";
+  });
   const [password, setPassword] = useState("");
   const [isAuthed, setIsAuthed] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
@@ -89,8 +92,10 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
+      setUsername(user);
+      setPassword(pass);
       localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
+      localStorage.removeItem("crowvo-admin-pass");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
@@ -137,19 +142,8 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
-    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
-  }, [loadOverview]);
-
-  useEffect(() => {
-    if (!isAuthed) return;
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
-  }, [tab, isAuthed, loadTab, username, password]);
+    localStorage.removeItem("crowvo-admin-pass");
+  }, []);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,18 +155,16 @@ export function AdminDashboard() {
   }
 
   async function createCode(singleUse: boolean) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
     setCreating(true);
     try {
       const res = await fetch("/api/admin/access-codes", {
         method: "POST",
-        headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
-        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: user }),
+        headers: { ...authHeaders(username, password), "Content-Type": "application/json" },
+        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: username }),
       });
       const payload = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(payload.error ?? "Create failed.");
-      await loadTab("access-codes", user, pass);
+      await loadTab("access-codes", username, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create code.");
     } finally {
@@ -181,14 +173,12 @@ export function AdminDashboard() {
   }
 
   async function deactivateCode(id: string) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
     await fetch(`/api/admin/access-codes?id=${id}`, {
       method: "PATCH",
-      headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
+      headers: { ...authHeaders(username, password), "Content-Type": "application/json" },
       body: JSON.stringify({ active: false }),
     });
-    await loadTab("access-codes", user, pass);
+    await loadTab("access-codes", username, password);
   }
 
   function signOut() {
@@ -236,7 +226,15 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => {
+                setTab(t.id);
+                if (t.id !== "overview") void loadTab(t.id, username, password);
+              }}
+              className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}
+            >
               {t.label}
             </button>
           ))}

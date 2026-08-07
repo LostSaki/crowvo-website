@@ -1,12 +1,14 @@
-# Configures Supabase Postgres for local Next (.env.local) and Cloudflare Workers (DATABASE_URL secret).
+# Configures Supabase Postgres for local Next (.env.local).
 # Usage:
 #   1. Supabase Dashboard → Project → Connect → ORM / Prisma → copy the **Transaction pooler** URI (port 6543, pgbouncer=true)
 #   2. Either copy it to clipboard, or save in .env.supabase as:  DATABASE_URL="postgresql://..."
 #   3. Run:  npm run setup:db
+#   4. To also push schema / update Cloudflare secrets, run:  npm run setup:db -- -ApplyRemoteChanges
 # Optional: SUPABASE_DB_PASSWORD in .env.supabase (script builds pooler + direct URLs for project tcocyipczygfhgxapwit)
 
 param(
   [string]$ProjectRef = "tcocyipczygfhgxapwit",
+  [switch]$ApplyRemoteChanges,
   [switch]$SkipWrangler,
   [switch]$SkipPrismaPush
 )
@@ -174,7 +176,11 @@ if (-not (Test-Path $supabaseOut)) {
   Set-Content -Path $supabaseOut -Value "# DATABASE_URL saved by setup script`nDATABASE_URL=`"$databaseUrl`"" -Encoding utf8
 }
 
-if (-not $SkipPrismaPush) {
+if (-not $ApplyRemoteChanges) {
+  Write-Host "Remote mutation steps skipped. Re-run with -ApplyRemoteChanges to run prisma db push and wrangler secret put."
+}
+
+if ($ApplyRemoteChanges -and -not $SkipPrismaPush) {
   Write-Host "Running prisma db push..."
   npx dotenv -e .env.local -- prisma db push
   if ($LASTEXITCODE -ne 0) {
@@ -182,7 +188,7 @@ if (-not $SkipPrismaPush) {
   }
 }
 
-if (-not $SkipWrangler) {
+if ($ApplyRemoteChanges -and -not $SkipWrangler) {
   Write-Host "Updating Cloudflare Worker secrets (DATABASE_URL, DIRECT_URL)..."
   $databaseUrl | npx wrangler secret put DATABASE_URL
   if ($LASTEXITCODE -ne 0) {

@@ -78,14 +78,14 @@ export async function requireAdmin(request: NextRequest) {
 
   const credentials = parseBasicAuth(request.headers.get("authorization"));
   if (!credentials) {
-    await rejectInvalidCredentials(request, "Missing or invalid authorization. Use Basic auth (username + password).");
+    return rejectInvalidCredentials(request, "Missing or invalid authorization. Use Basic auth (username + password).");
   }
 
   if (
     !constantTimeCompare(credentials.username, expectedUser) ||
     !constantTimeCompare(credentials.password, expectedPass)
   ) {
-    await rejectInvalidCredentials(request, "Invalid admin credentials.");
+    return rejectInvalidCredentials(request, "Invalid admin credentials.");
   }
   return { ok: true };
 }

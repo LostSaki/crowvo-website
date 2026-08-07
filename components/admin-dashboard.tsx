@@ -49,6 +49,14 @@ type AuditLog = {
 
 type Tab = "overview" | "access-codes" | "users" | "audit" | "platform";
 
+type AdminSession = {
+  username: string;
+  password: string;
+};
+
+const ADMIN_USER_STORAGE_KEY = "crowvo-admin-user";
+const LEGACY_ADMIN_PASS_STORAGE_KEY = "crowvo-admin-pass";
+
 function basicAuthorizationHeader(username: string, password: string) {
   const pair = `${username}:${password}`;
   const bytes = new TextEncoder().encode(pair);
@@ -73,6 +81,7 @@ export function AdminDashboard() {
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [platformStats, setPlatformStats] = useState<Record<string, number> | null>(null);
+  const [session, setSession] = useState<AdminSession | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -89,12 +98,15 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
-      localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
+      setSession({ username: user, password: pass });
+      setPassword("");
+      localStorage.setItem(ADMIN_USER_STORAGE_KEY, user);
+      localStorage.removeItem(LEGACY_ADMIN_PASS_STORAGE_KEY);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
       setIsAuthed(false);
+      setSession(null);
     } finally {
       setLoading(false);
     }
@@ -137,19 +149,15 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
-    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
+    const savedUser = localStorage.getItem(ADMIN_USER_STORAGE_KEY) ?? "";
     setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
-  }, [loadOverview]);
+    localStorage.removeItem(LEGACY_ADMIN_PASS_STORAGE_KEY);
+  }, []);
 
   useEffect(() => {
-    if (!isAuthed) return;
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
-  }, [tab, isAuthed, loadTab, username, password]);
+    if (!isAuthed || !session) return;
+    if (tab !== "overview") void loadTab(tab, session.username, session.password);
+  }, [tab, isAuthed, loadTab, session]);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,18 +169,20 @@ export function AdminDashboard() {
   }
 
   async function createCode(singleUse: boolean) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    if (!session) {
+      setError("Sign in again to manage access codes.");
+      return;
+    }
     setCreating(true);
     try {
       const res = await fetch("/api/admin/access-codes", {
         method: "POST",
-        headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
-        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: user }),
+        headers: { ...authHeaders(session.username, session.password), "Content-Type": "application/json" },
+        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: session.username }),
       });
       const payload = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(payload.error ?? "Create failed.");
-      await loadTab("access-codes", user, pass);
+      await loadTab("access-codes", session.username, session.password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create code.");
     } finally {
@@ -181,21 +191,24 @@ export function AdminDashboard() {
   }
 
   async function deactivateCode(id: string) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    if (!session) {
+      setError("Sign in again to manage access codes.");
+      return;
+    }
     await fetch(`/api/admin/access-codes?id=${id}`, {
       method: "PATCH",
-      headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
+      headers: { ...authHeaders(session.username, session.password), "Content-Type": "application/json" },
       body: JSON.stringify({ active: false }),
     });
-    await loadTab("access-codes", user, pass);
+    await loadTab("access-codes", session.username, session.password);
   }
 
   function signOut() {
-    localStorage.removeItem("crowvo-admin-user");
-    localStorage.removeItem("crowvo-admin-pass");
+    localStorage.removeItem(ADMIN_USER_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_ADMIN_PASS_STORAGE_KEY);
     setUsername("");
     setPassword("");
+    setSession(null);
     setData(null);
     setIsAuthed(false);
     setError("");

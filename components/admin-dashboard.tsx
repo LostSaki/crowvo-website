@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { crowvoAppUrl } from "@/lib/app-url";
 
 type AdminData = {
@@ -134,11 +134,6 @@ export function AdminDashboard() {
     [isAuthed],
   );
 
-  useEffect(() => {
-    if (!isAuthed) return;
-    if (tab !== "overview") void loadTab(tab, username, password);
-  }, [tab, isAuthed, loadTab, username, password]);
-
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!username.trim() || !password) {
@@ -148,6 +143,13 @@ export function AdminDashboard() {
     const trimmedUsername = username.trim();
     setUsername(trimmedUsername);
     await loadOverview(trimmedUsername, password);
+  }
+
+  async function selectTab(nextTab: Tab) {
+    setTab(nextTab);
+    if (nextTab !== "overview" && isAuthed) {
+      await loadTab(nextTab, username, password);
+    }
   }
 
   async function createCode(singleUse: boolean) {
@@ -186,6 +188,7 @@ export function AdminDashboard() {
     setPassword("");
     setData(null);
     setIsAuthed(false);
+    setTab("overview");
     setError("");
   }
 
@@ -224,7 +227,7 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button key={t.id} type="button" onClick={() => void selectTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
               {t.label}
             </button>
           ))}

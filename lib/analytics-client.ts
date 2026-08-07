@@ -32,7 +32,9 @@ export function trackEvent(eventName: string, metadata?: Record<string, string |
     metadata,
   };
 
-  posthog.capture(eventName, payload);
+  if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    posthog.capture(eventName, payload);
+  }
   fetch("/api/analytics/track", {
     method: "POST",
     headers: { "content-type": "application/json" },

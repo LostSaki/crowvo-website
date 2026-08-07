@@ -89,8 +89,8 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
-      localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
+      setUsername(user);
+      setPassword(pass);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
@@ -137,17 +137,10 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
-    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
-  }, [loadOverview]);
-
-  useEffect(() => {
     if (!isAuthed) return;
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    const user = username.trim();
+    const pass = password;
+    if (!user || !pass) return;
     if (tab !== "overview") void loadTab(tab, user, pass);
   }, [tab, isAuthed, loadTab, username, password]);
 
@@ -161,8 +154,9 @@ export function AdminDashboard() {
   }
 
   async function createCode(singleUse: boolean) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    const user = username.trim();
+    const pass = password;
+    if (!user || !pass) return;
     setCreating(true);
     try {
       const res = await fetch("/api/admin/access-codes", {
@@ -181,8 +175,9 @@ export function AdminDashboard() {
   }
 
   async function deactivateCode(id: string) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    const user = username.trim();
+    const pass = password;
+    if (!user || !pass) return;
     await fetch(`/api/admin/access-codes?id=${id}`, {
       method: "PATCH",
       headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
@@ -192,8 +187,6 @@ export function AdminDashboard() {
   }
 
   function signOut() {
-    localStorage.removeItem("crowvo-admin-user");
-    localStorage.removeItem("crowvo-admin-pass");
     setUsername("");
     setPassword("");
     setData(null);

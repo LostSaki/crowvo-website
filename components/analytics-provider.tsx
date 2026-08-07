@@ -7,24 +7,36 @@ import { trackEvent } from "@/lib/analytics-client";
 
 export function AnalyticsProvider() {
   const pathname = usePathname();
+  const analyticsDisabled = pathname?.startsWith("/admin") ?? false;
+  const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    if (analyticsDisabled || !posthogKey) {
       return;
     }
 
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+    posthog.init(posthogKey, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://app.posthog.com",
       capture_pageview: false,
     });
-  }, []);
+  }, [analyticsDisabled, posthogKey]);
 
   useEffect(() => {
-    posthog.capture("$pageview", { pathname });
+    if (analyticsDisabled) {
+      return;
+    }
+
+    if (posthogKey) {
+      posthog.capture("$pageview", { pathname });
+    }
     trackEvent("page_view", { pathname });
-  }, [pathname]);
+  }, [analyticsDisabled, pathname, posthogKey]);
 
   useEffect(() => {
+    if (analyticsDisabled) {
+      return;
+    }
+
     const marks = [25, 50, 75, 100];
     const seen = new Set<number>();
 
@@ -37,7 +49,9 @@ export function AnalyticsProvider() {
       for (const mark of marks) {
         if (percentage >= mark && !seen.has(mark)) {
           seen.add(mark);
-          posthog.capture("scroll_depth", { mark, pathname: window.location.pathname });
+          if (posthogKey) {
+            posthog.capture("scroll_depth", { mark, pathname: window.location.pathname });
+          }
           trackEvent("scroll_depth", { mark, pathname: window.location.pathname });
         }
       }
@@ -45,9 +59,13 @@ export function AnalyticsProvider() {
 
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [analyticsDisabled, posthogKey]);
 
   useEffect(() => {
+    if (analyticsDisabled) {
+      return;
+    }
+
     const handler = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const tracked = target?.closest("[data-analytics-event]") as HTMLElement | null;
@@ -64,7 +82,7 @@ export function AnalyticsProvider() {
 
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, []);
+  }, [analyticsDisabled]);
 
   return null;
 }

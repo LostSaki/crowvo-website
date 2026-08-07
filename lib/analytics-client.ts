@@ -23,6 +23,10 @@ function getAttribution() {
 }
 
 export function trackEvent(eventName: string, metadata?: Record<string, string | number | boolean | null>) {
+  if (window.location.pathname.startsWith("/admin")) {
+    return;
+  }
+
   const payload = {
     eventName,
     path: window.location.pathname,

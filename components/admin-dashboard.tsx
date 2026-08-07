@@ -89,8 +89,6 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
-      localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
@@ -137,18 +135,8 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
-    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
-  }, [loadOverview]);
-
-  useEffect(() => {
     if (!isAuthed) return;
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
+    if (tab !== "overview") void loadTab(tab, username, password);
   }, [tab, isAuthed, loadTab, username, password]);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
@@ -157,12 +145,14 @@ export function AdminDashboard() {
       setError("Enter your admin username and password.");
       return;
     }
-    await loadOverview(username.trim(), password);
+    const trimmedUsername = username.trim();
+    setUsername(trimmedUsername);
+    await loadOverview(trimmedUsername, password);
   }
 
   async function createCode(singleUse: boolean) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    const user = username;
+    const pass = password;
     setCreating(true);
     try {
       const res = await fetch("/api/admin/access-codes", {
@@ -181,8 +171,8 @@ export function AdminDashboard() {
   }
 
   async function deactivateCode(id: string) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    const user = username;
+    const pass = password;
     await fetch(`/api/admin/access-codes?id=${id}`, {
       method: "PATCH",
       headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
@@ -192,8 +182,6 @@ export function AdminDashboard() {
   }
 
   function signOut() {
-    localStorage.removeItem("crowvo-admin-user");
-    localStorage.removeItem("crowvo-admin-pass");
     setUsername("");
     setPassword("");
     setData(null);

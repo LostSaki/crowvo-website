@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     const scriptSrc = isProd
       ? "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://static.hotjar.com https://challenges.cloudflare.com;"
       : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://static.hotjar.com https://challenges.cloudflare.com;";
+    const adminScriptSrc = isProd ? "script-src 'self' 'unsafe-inline';" : "script-src 'self' 'unsafe-inline' 'unsafe-eval';";
 
     const sharedSecurityHeaders = [
       { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -27,13 +28,26 @@ const nextConfig: NextConfig = {
           `default-src 'self'; ${scriptSrc} connect-src 'self' https://app.posthog.com https://*.hotjar.com https://*.hotjar.io https://challenges.cloudflare.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src https://challenges.cloudflare.com;`,
       },
     ];
+    const adminSecurityHeaders = sharedSecurityHeaders.map((header) =>
+      header.key === "Content-Security-Policy"
+        ? {
+            key: header.key,
+            value:
+              `default-src 'self'; ${adminScriptSrc} connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'none';`,
+          }
+        : header,
+    );
 
     const bypassCacheHeaders = [{ key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" }];
 
     return [
       {
         source: "/admin",
-        headers: [...bypassCacheHeaders, ...sharedSecurityHeaders],
+        headers: [...bypassCacheHeaders, ...adminSecurityHeaders],
+      },
+      {
+        source: "/admin/:path*",
+        headers: [...bypassCacheHeaders, ...adminSecurityHeaders],
       },
       {
         source: "/api/admin/:path*",

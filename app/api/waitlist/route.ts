@@ -18,6 +18,10 @@ async function generateUniqueInviteCode() {
   throw new Error("Could not allocate invite code.");
 }
 
+function waitlistSource(source: string | undefined, communityType: string) {
+  return [source, `community:${communityType}`].filter(Boolean).join(" | ");
+}
+
 export async function POST(request: NextRequest) {
   const ip =
     request.headers.get("cf-connecting-ip") ??
@@ -59,10 +63,9 @@ export async function POST(request: NextRequest) {
     const created = await prisma.waitlistSignup.create({
       data: {
         email,
-        communityType,
         inviteCode: await generateUniqueInviteCode(),
         referralCode,
-        source,
+        source: waitlistSource(source, communityType),
         referredById: referrer?.id,
       },
     });

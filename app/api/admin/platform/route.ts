@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
+import { adminAuthResponse, requireAdmin } from "@/lib/admin-auth";
 import { crowvoAdminFetch } from "@/lib/crowvo-admin-api";
 
 export async function GET(request: NextRequest) {
   try {
     await requireAdmin(request);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unauthorized";
-    return NextResponse.json({ error: message }, { status: 401 });
+    return adminAuthResponse(error);
   }
 
   const section = request.nextUrl.searchParams.get("section") ?? "stats";

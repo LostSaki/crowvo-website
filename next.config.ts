@@ -29,11 +29,20 @@ const nextConfig: NextConfig = {
     ];
 
     const bypassCacheHeaders = [{ key: "Cache-Control", value: "private, no-store, max-age=0, must-revalidate" }];
+    const adminSecurityHeaders = sharedSecurityHeaders.map((header) =>
+      header.key === "Content-Security-Policy"
+        ? {
+            ...header,
+            value:
+              "default-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:;",
+          }
+        : header,
+    );
 
     return [
       {
-        source: "/admin",
-        headers: [...bypassCacheHeaders, ...sharedSecurityHeaders],
+        source: "/admin/:path*",
+        headers: [...bypassCacheHeaders, ...adminSecurityHeaders],
       },
       {
         source: "/api/admin/:path*",

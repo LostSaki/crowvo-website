@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { crowvoAppUrl } from "@/lib/app-url";
 
 type AdminData = {
@@ -77,7 +77,11 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  const loadOverview = useCallback(async (user: string, pass: string) => {
+  useEffect(() => {
+    localStorage.removeItem("crowvo-admin-pass");
+  }, []);
+
+  async function loadOverview(user: string, pass: string) {
     setLoading(true);
     try {
       const response = await fetch("/api/admin/overview", { headers: authHeaders(user, pass) });
@@ -89,8 +93,6 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
-      localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
@@ -98,58 +100,47 @@ export function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }
 
-  const loadTab = useCallback(
-    async (nextTab: Tab, user: string, pass: string) => {
-      if (!isAuthed) return;
-      setLoading(true);
-      try {
-        if (nextTab === "access-codes") {
-          const res = await fetch("/api/admin/access-codes", { headers: authHeaders(user, pass) });
-          const payload = (await res.json()) as { codes?: AccessCode[]; error?: string };
-          if (!res.ok) throw new Error(payload.error ?? "Failed to load codes.");
-          setCodes(payload.codes ?? []);
-        } else if (nextTab === "users") {
-          const res = await fetch("/api/admin/platform?section=users", { headers: authHeaders(user, pass) });
-          const payload = (await res.json()) as { users?: PlatformUser[]; error?: string };
-          if (!res.ok) throw new Error(payload.error ?? "Failed to load users.");
-          setUsers(payload.users ?? []);
-        } else if (nextTab === "audit") {
-          const res = await fetch("/api/admin/platform?section=audit", { headers: authHeaders(user, pass) });
-          const payload = (await res.json()) as { logs?: AuditLog[]; error?: string };
-          if (!res.ok) throw new Error(payload.error ?? "Failed to load audit logs.");
-          setLogs(payload.logs ?? []);
-        } else if (nextTab === "platform") {
-          const res = await fetch("/api/admin/platform?section=stats", { headers: authHeaders(user, pass) });
-          const payload = (await res.json()) as Record<string, number> & { error?: string };
-          if (!res.ok) throw new Error(payload.error ?? "Failed to load platform stats.");
-          setPlatformStats(payload);
-        }
-        setError("");
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Request failed.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [isAuthed],
-  );
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
-    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
-  }, [loadOverview]);
-
-  useEffect(() => {
+  async function loadTab(nextTab: Tab, user: string, pass: string) {
     if (!isAuthed) return;
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
-  }, [tab, isAuthed, loadTab, username, password]);
+    setLoading(true);
+    try {
+      if (nextTab === "access-codes") {
+        const res = await fetch("/api/admin/access-codes", { headers: authHeaders(user, pass) });
+        const payload = (await res.json()) as { codes?: AccessCode[]; error?: string };
+        if (!res.ok) throw new Error(payload.error ?? "Failed to load codes.");
+        setCodes(payload.codes ?? []);
+      } else if (nextTab === "users") {
+        const res = await fetch("/api/admin/platform?section=users", { headers: authHeaders(user, pass) });
+        const payload = (await res.json()) as { users?: PlatformUser[]; error?: string };
+        if (!res.ok) throw new Error(payload.error ?? "Failed to load users.");
+        setUsers(payload.users ?? []);
+      } else if (nextTab === "audit") {
+        const res = await fetch("/api/admin/platform?section=audit", { headers: authHeaders(user, pass) });
+        const payload = (await res.json()) as { logs?: AuditLog[]; error?: string };
+        if (!res.ok) throw new Error(payload.error ?? "Failed to load audit logs.");
+        setLogs(payload.logs ?? []);
+      } else if (nextTab === "platform") {
+        const res = await fetch("/api/admin/platform?section=stats", { headers: authHeaders(user, pass) });
+        const payload = (await res.json()) as Record<string, number> & { error?: string };
+        if (!res.ok) throw new Error(payload.error ?? "Failed to load platform stats.");
+        setPlatformStats(payload);
+      }
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Request failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function selectTab(nextTab: Tab) {
+    setTab(nextTab);
+    if (nextTab !== "overview") {
+      await loadTab(nextTab, username, password);
+    }
+  }
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,18 +152,16 @@ export function AdminDashboard() {
   }
 
   async function createCode(singleUse: boolean) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
     setCreating(true);
     try {
       const res = await fetch("/api/admin/access-codes", {
         method: "POST",
-        headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
-        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: user }),
+        headers: { ...authHeaders(username, password), "Content-Type": "application/json" },
+        body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: username }),
       });
       const payload = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(payload.error ?? "Create failed.");
-      await loadTab("access-codes", user, pass);
+      await loadTab("access-codes", username, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create code.");
     } finally {
@@ -181,17 +170,16 @@ export function AdminDashboard() {
   }
 
   async function deactivateCode(id: string) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
     await fetch(`/api/admin/access-codes?id=${id}`, {
       method: "PATCH",
-      headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
+      headers: { ...authHeaders(username, password), "Content-Type": "application/json" },
       body: JSON.stringify({ active: false }),
     });
-    await loadTab("access-codes", user, pass);
+    await loadTab("access-codes", username, password);
   }
 
   function signOut() {
+    // Clear legacy stored credentials written by older builds.
     localStorage.removeItem("crowvo-admin-user");
     localStorage.removeItem("crowvo-admin-pass");
     setUsername("");
@@ -236,7 +224,7 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button key={t.id} type="button" onClick={() => void selectTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
               {t.label}
             </button>
           ))}

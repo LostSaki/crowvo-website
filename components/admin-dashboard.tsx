@@ -139,16 +139,25 @@ export function AdminDashboard() {
   useEffect(() => {
     const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
     const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      setUsername(savedUser);
+      setPassword(savedPass);
+      if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [loadOverview]);
 
   useEffect(() => {
     if (!isAuthed) return;
     const user = localStorage.getItem("crowvo-admin-user") ?? username;
     const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
+    if (tab !== "overview") {
+      queueMicrotask(() => void loadTab(tab, user, pass));
+    }
   }, [tab, isAuthed, loadTab, username, password]);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {

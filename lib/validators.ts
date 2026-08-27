@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+export const waitlistSchema = z.object({
+  email: z.string().trim().email().min(5).max(120),
+  community: z.string().trim().min(2).max(160),
+  referralCode: z.string().trim().max(60).optional(),
+});
+
+export const investorInterestSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  email: z.string().trim().email().min(5).max(120),
+  company: z.string().trim().max(120).optional(),
+  message: z.string().trim().min(10).max(1200),
+});
+
 export const analyticsTrackSchema = z.object({
   eventName: z.string().trim().min(2).max(100),
   path: z.string().trim().max(300).optional(),

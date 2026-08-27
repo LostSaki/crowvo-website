@@ -1,0 +1,53 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        target: HTMLElement,
+        options: { sitekey: string; callback: (token: string) => void; theme?: "dark" | "light" },
+      ) => void;
+    };
+  }
+}
+
+export function TurnstileWidget({ onToken }: { onToken: (token: string) => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const renderedRef = useRef(false);
+
+  useEffect(() => {
+    const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+    if (!siteKey || renderedRef.current) {
+      return;
+    }
+
+    const tryRender = () => {
+      if (!containerRef.current || !window.turnstile || renderedRef.current) {
+        return false;
+      }
+      window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        callback: onToken,
+        theme: "dark",
+      });
+      renderedRef.current = true;
+      return true;
+    };
+
+    if (tryRender()) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      if (tryRender()) {
+        window.clearInterval(interval);
+      }
+    }, 100);
+
+    return () => window.clearInterval(interval);
+  }, [onToken]);
+
+  return <div ref={containerRef} className="min-h-16" />;
+}

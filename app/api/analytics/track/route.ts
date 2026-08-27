@@ -9,7 +9,9 @@ export async function POST(request: NextRequest) {
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     "unknown";
 
-  const rateLimit = await limitRequests(`analytics:${ip}`, 80, 60_000);
+  const rateLimit = await limitRequests(`analytics:${ip}`, 80, 60_000, {
+    allowLocalFallback: process.env.NODE_ENV !== "production",
+  });
   if (!rateLimit.success) {
     return NextResponse.json({ error: "Too many events." }, { status: 429 });
   }

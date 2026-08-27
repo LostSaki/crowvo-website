@@ -26,9 +26,15 @@ export async function limitRequests(
   key: string,
   maxRequests = 8,
   windowMs = 60_000,
+  options: { allowLocalFallback?: boolean } = {},
 ): Promise<{ success: boolean; remaining: number; retryAfterSec: number }> {
+  const allowLocalFallback = options.allowLocalFallback ?? true;
   const ratelimit = createRatelimit("hubly-ratelimit", maxRequests, `${Math.ceil(windowMs / 1000)} s`);
   if (!ratelimit) {
+    if (!allowLocalFallback) {
+      console.error("Distributed rate-limit is not configured; rejecting request.");
+      return { success: false, remaining: 0, retryAfterSec: Math.ceil(windowMs / 1000) };
+    }
     return fallbackRateLimit(key, maxRequests, windowMs);
   }
 
@@ -40,6 +46,10 @@ export async function limitRequests(
       retryAfterSec: result.reset ? Math.max(0, Math.ceil((result.reset - Date.now()) / 1000)) : 0,
     };
   } catch (error) {
+    if (!allowLocalFallback) {
+      console.error("Distributed rate-limit failed; rejecting request.", error);
+      return { success: false, remaining: 0, retryAfterSec: Math.ceil(windowMs / 1000) };
+    }
     console.error("Distributed rate-limit failed; falling back to local limiter.", error);
     return fallbackRateLimit(key, maxRequests, windowMs);
   }

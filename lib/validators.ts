@@ -1,5 +1,27 @@
 import { z } from "zod";
 
+const metadataValueSchema = z.union([z.string().max(500), z.number(), z.boolean(), z.null()]);
+const analyticsMetadataSchema = z
+  .record(z.string().max(80), metadataValueSchema)
+  .optional()
+  .superRefine((metadata, ctx) => {
+    if (!metadata) return;
+
+    if (Object.keys(metadata).length > 20) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Analytics metadata may include at most 20 keys.",
+      });
+    }
+
+    if (JSON.stringify(metadata).length > 4096) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Analytics metadata is too large.",
+      });
+    }
+  });
+
 export const waitlistSchema = z.object({
   email: z.email().min(5).max(120),
   communityType: z.string().trim().min(2).max(160),
@@ -20,5 +42,5 @@ export const analyticsTrackSchema = z.object({
   utmMedium: z.string().trim().max(120).optional(),
   utmCampaign: z.string().trim().max(160).optional(),
   sessionId: z.string().trim().max(120).optional(),
-  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+  metadata: analyticsMetadataSchema,
 });

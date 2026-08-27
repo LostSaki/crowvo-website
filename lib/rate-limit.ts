@@ -29,6 +29,10 @@ export async function limitRequests(
 ): Promise<{ success: boolean; remaining: number; retryAfterSec: number }> {
   const ratelimit = createRatelimit("hubly-ratelimit", maxRequests, `${Math.ceil(windowMs / 1000)} s`);
   if (!ratelimit) {
+    if (process.env.NODE_ENV === "production") {
+      console.error("Distributed rate-limit is not configured; rejecting request in production.");
+      return { success: false, remaining: 0, retryAfterSec: Math.ceil(windowMs / 1000) };
+    }
     return fallbackRateLimit(key, maxRequests, windowMs);
   }
 
@@ -41,6 +45,9 @@ export async function limitRequests(
     };
   } catch (error) {
     console.error("Distributed rate-limit failed; falling back to local limiter.", error);
+    if (process.env.NODE_ENV === "production") {
+      return { success: false, remaining: 0, retryAfterSec: Math.ceil(windowMs / 1000) };
+    }
     return fallbackRateLimit(key, maxRequests, windowMs);
   }
 }

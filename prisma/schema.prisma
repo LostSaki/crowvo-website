@@ -12,6 +12,7 @@ model WaitlistSignup {
   id            String          @id @default(cuid())
   email         String          @unique
   inviteCode    String          @unique
+  communityType String?
   referralCode  String?
   source        String?
   referredById  String?

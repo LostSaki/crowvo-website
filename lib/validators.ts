@@ -10,3 +10,10 @@ export const analyticsTrackSchema = z.object({
   sessionId: z.string().trim().max(120).optional(),
   metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
 });
+
+export const waitlistSignupSchema = z.object({
+  email: z.string().trim().email().max(254),
+  communityType: z.string().trim().min(2).max(160),
+  referralCode: z.string().trim().min(1).max(80).optional(),
+  source: z.string().trim().max(120).optional(),
+});

@@ -49,6 +49,9 @@ type AuditLog = {
 
 type Tab = "overview" | "access-codes" | "users" | "audit" | "platform";
 
+const ADMIN_USER_STORAGE_KEY = "crowvo-admin-user";
+const ADMIN_PASS_STORAGE_KEY = "crowvo-admin-pass";
+
 function basicAuthorizationHeader(username: string, password: string) {
   const pair = `${username}:${password}`;
   const bytes = new TextEncoder().encode(pair);
@@ -64,7 +67,9 @@ function authHeaders(user: string, pass: string) {
 }
 
 export function AdminDashboard() {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() =>
+    typeof window === "undefined" ? "" : (localStorage.getItem(ADMIN_USER_STORAGE_KEY) ?? ""),
+  );
   const [password, setPassword] = useState("");
   const [isAuthed, setIsAuthed] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
@@ -89,8 +94,9 @@ export function AdminDashboard() {
       setData(payload);
       setError("");
       setIsAuthed(true);
-      localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
+      setUsername(user);
+      localStorage.setItem(ADMIN_USER_STORAGE_KEY, user);
+      localStorage.removeItem(ADMIN_PASS_STORAGE_KEY);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
@@ -137,19 +143,8 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
-    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
-  }, [loadOverview]);
-
-  useEffect(() => {
-    if (!isAuthed) return;
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
-  }, [tab, isAuthed, loadTab, username, password]);
+    localStorage.removeItem(ADMIN_PASS_STORAGE_KEY);
+  }, []);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,8 +156,8 @@ export function AdminDashboard() {
   }
 
   async function createCode(singleUse: boolean) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    const user = username;
+    const pass = password;
     setCreating(true);
     try {
       const res = await fetch("/api/admin/access-codes", {
@@ -181,8 +176,8 @@ export function AdminDashboard() {
   }
 
   async function deactivateCode(id: string) {
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
+    const user = username;
+    const pass = password;
     await fetch(`/api/admin/access-codes?id=${id}`, {
       method: "PATCH",
       headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
@@ -192,8 +187,8 @@ export function AdminDashboard() {
   }
 
   function signOut() {
-    localStorage.removeItem("crowvo-admin-user");
-    localStorage.removeItem("crowvo-admin-pass");
+    localStorage.removeItem(ADMIN_USER_STORAGE_KEY);
+    localStorage.removeItem(ADMIN_PASS_STORAGE_KEY);
     setUsername("");
     setPassword("");
     setData(null);
@@ -236,7 +231,15 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => {
+                setTab(t.id);
+                if (t.id !== "overview") void loadTab(t.id, username, password);
+              }}
+              className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}
+            >
               {t.label}
             </button>
           ))}

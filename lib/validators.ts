@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+export const waitlistRequestSchema = z.object({
+  email: z.email().min(5).max(120),
+  community: z.string().trim().min(2).max(200),
+  referralCode: z.string().trim().max(60).optional().nullable(),
+  source: z.string().trim().max(200).optional(),
+});
+
+export const contactMessageSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  email: z.email().min(5).max(120),
+  message: z.string().trim().min(10).max(1200),
+  source: z.string().trim().max(200).optional(),
+});
+
 export const analyticsTrackSchema = z.object({
   eventName: z.string().trim().min(2).max(100),
   path: z.string().trim().max(300).optional(),

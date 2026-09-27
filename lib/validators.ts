@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const waitlistSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  communityType: z.string().trim().min(2).max(160).optional(),
+  referralCode: z.string().trim().max(64).optional().nullable(),
+  source: z.string().trim().max(300).optional(),
+});
+
 export const analyticsTrackSchema = z.object({
   eventName: z.string().trim().min(2).max(100),
   path: z.string().trim().max(300).optional(),

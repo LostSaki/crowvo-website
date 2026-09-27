@@ -2,13 +2,46 @@
 
 import { FormEvent, useState } from "react";
 import { MarketingPage } from "@/components/marketing-page";
+import { trackEvent } from "@/lib/analytics-client";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSent(true);
+    setError("");
+    setSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const response = await fetch("/api/investor-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.get("name"),
+          email: formData.get("email"),
+          company: formData.get("company"),
+          message: formData.get("message"),
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Could not save your message.");
+      }
+      try {
+        trackEvent("investor_form_submission", { source: "contact-page" });
+      } catch {
+        // Analytics must never make a persisted contact request look like a failure.
+      }
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save your message.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -23,18 +56,29 @@ export default function ContactPage() {
         <form onSubmit={onSubmit} className="glass-panel max-w-xl space-y-4 rounded-2xl p-6">
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Name
-            <input required className="field-input" />
+            <input name="name" required className="field-input" />
           </label>
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Email
-            <input type="email" required className="field-input" />
+            <input name="email" type="email" required className="field-input" />
+          </label>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
+            Community or organization
+            <input name="company" required className="field-input" />
           </label>
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Message
-            <textarea required rows={4} className="field-textarea" placeholder="Tell us about your community or question…" />
+            <textarea
+              name="message"
+              required
+              rows={4}
+              className="field-textarea"
+              placeholder="Tell us about your community or question…"
+            />
           </label>
-          <button type="submit" className="btn-primary">
-            Send message
+          {error ? <p className="text-sm text-red-300">{error}</p> : null}
+          <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+            {submitting ? "Sending..." : "Send message"}
           </button>
         </form>
       )}

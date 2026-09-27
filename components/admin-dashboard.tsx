@@ -90,7 +90,7 @@ export function AdminDashboard() {
       setError("");
       setIsAuthed(true);
       localStorage.setItem("crowvo-admin-user", user);
-      localStorage.setItem("crowvo-admin-pass", pass);
+      localStorage.removeItem("crowvo-admin-pass");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
       setData(null);
@@ -137,19 +137,8 @@ export function AdminDashboard() {
   );
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("crowvo-admin-user") ?? "";
-    const savedPass = localStorage.getItem("crowvo-admin-pass") ?? "";
-    setUsername(savedUser);
-    setPassword(savedPass);
-    if (savedUser && savedPass) void loadOverview(savedUser, savedPass);
-  }, [loadOverview]);
-
-  useEffect(() => {
-    if (!isAuthed) return;
-    const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
-    if (tab !== "overview") void loadTab(tab, user, pass);
-  }, [tab, isAuthed, loadTab, username, password]);
+    localStorage.removeItem("crowvo-admin-pass");
+  }, []);
 
   async function onSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -160,19 +149,27 @@ export function AdminDashboard() {
     await loadOverview(username.trim(), password);
   }
 
+  function selectTab(nextTab: Tab) {
+    setTab(nextTab);
+    if (!isAuthed || nextTab === "overview") {
+      return;
+    }
+    const user = localStorage.getItem("crowvo-admin-user") ?? username;
+    void loadTab(nextTab, user, password);
+  }
+
   async function createCode(singleUse: boolean) {
     const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
     setCreating(true);
     try {
       const res = await fetch("/api/admin/access-codes", {
         method: "POST",
-        headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
+        headers: { ...authHeaders(user, password), "Content-Type": "application/json" },
         body: JSON.stringify({ singleUse, maxUses: singleUse ? 1 : 25, label: singleUse ? "Single-use invite" : "Multi-use demo batch", createdByLabel: user }),
       });
       const payload = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(payload.error ?? "Create failed.");
-      await loadTab("access-codes", user, pass);
+      await loadTab("access-codes", user, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create code.");
     } finally {
@@ -182,13 +179,12 @@ export function AdminDashboard() {
 
   async function deactivateCode(id: string) {
     const user = localStorage.getItem("crowvo-admin-user") ?? username;
-    const pass = localStorage.getItem("crowvo-admin-pass") ?? password;
     await fetch(`/api/admin/access-codes?id=${id}`, {
       method: "PATCH",
-      headers: { ...authHeaders(user, pass), "Content-Type": "application/json" },
+      headers: { ...authHeaders(user, password), "Content-Type": "application/json" },
       body: JSON.stringify({ active: false }),
     });
-    await loadTab("access-codes", user, pass);
+    await loadTab("access-codes", user, password);
   }
 
   function signOut() {
@@ -236,7 +232,7 @@ export function AdminDashboard() {
       {isAuthed ? (
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
+            <button key={t.id} type="button" onClick={() => selectTab(t.id)} className={`rounded-full px-4 py-2 text-sm ${tab === t.id ? "bg-accent text-white" : "border border-border text-muted hover:text-foreground"}`}>
               {t.label}
             </button>
           ))}

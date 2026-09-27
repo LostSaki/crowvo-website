@@ -1,5 +1,23 @@
 import { z } from "zod";
 
+export const waitlistSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+  source: z.string().trim().min(2).max(200),
+  referralCode: z
+    .string()
+    .trim()
+    .max(64)
+    .optional()
+    .nullable()
+    .transform((value) => value || undefined),
+});
+
+export const contactSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  email: z.string().trim().toLowerCase().email().max(254),
+  message: z.string().trim().min(5).max(2_000),
+});
+
 export const analyticsTrackSchema = z.object({
   eventName: z.string().trim().min(2).max(100),
   path: z.string().trim().max(300).optional(),

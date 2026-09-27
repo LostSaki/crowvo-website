@@ -3,12 +3,45 @@
 import { FormEvent, useState } from "react";
 import { MarketingPage } from "@/components/marketing-page";
 
-export default function WaitlistPage() {
-  const [sent, setSent] = useState(false);
+type Status = "idle" | "loading" | "success" | "error";
 
-  function onSubmit(e: FormEvent) {
+export default function WaitlistPage() {
+  const [status, setStatus] = useState<Status>("idle");
+  const [email, setEmail] = useState("");
+  const [community, setCommunity] = useState("");
+  const [message, setMessage] = useState("");
+  const sent = status === "success";
+
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setSent(true);
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email,
+          community,
+          referralCode: params.get("ref") ?? undefined,
+          source: document.referrer || "direct",
+        }),
+      });
+      const payload = (await response.json()) as { message?: string; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Could not join the waitlist.");
+      }
+
+      setStatus("success");
+      setMessage(payload.message ?? "You're on the list. We'll reach out when a spot opens for your community.");
+      setEmail("");
+      setCommunity("");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Could not join the waitlist.");
+    }
   }
 
   return (
@@ -19,25 +52,34 @@ export default function WaitlistPage() {
     >
       {sent ? (
         <p className="glass-panel rounded-2xl p-5 text-sm text-muted">
-          You&apos;re on the list. We&apos;ll reach out when a spot opens for your community.
+          {message}
         </p>
       ) : (
         <form onSubmit={onSubmit} className="glass-panel max-w-xl space-y-4 rounded-2xl p-6">
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Email
-            <input type="email" required className="field-input" />
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="field-input"
+            />
           </label>
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             What kind of community?
             <input
               required
+              value={community}
+              onChange={(event) => setCommunity(event.target.value)}
               className="field-input"
               placeholder="Friend group, study club, local org, gaming group…"
             />
           </label>
-          <button type="submit" className="btn-primary">
-            Request access
+          <button type="submit" disabled={status === "loading"} className="btn-primary disabled:opacity-60">
+            {status === "loading" ? "Requesting..." : "Request access"}
           </button>
+          {status === "error" && message ? <p className="text-sm text-red-300">{message}</p> : null}
         </form>
       )}
     </MarketingPage>

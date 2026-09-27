@@ -1,6 +1,36 @@
 import { createRatelimit } from "@/lib/upstash";
 
-const localHits = new Map<string, number[]>();
+const localHits = new Map<string, { timestamps: number[]; windowMs: number }>();
+const MAX_FALLBACK_KEYS = 10_000;
+const FALLBACK_PRUNE_INTERVAL_MS = 10_000;
+let lastFallbackPruneAt = 0;
+
+function pruneFallbackHits(now: number) {
+  if (now - lastFallbackPruneAt < FALLBACK_PRUNE_INTERVAL_MS) {
+    return;
+  }
+
+  for (const [entryKey, entry] of localHits) {
+    const windowStart = now - entry.windowMs;
+    const validHits = entry.timestamps.filter((timestamp) => timestamp > windowStart);
+    if (validHits.length > 0) {
+      localHits.set(entryKey, { ...entry, timestamps: validHits });
+    } else {
+      localHits.delete(entryKey);
+    }
+  }
+  lastFallbackPruneAt = now;
+}
+
+function trimFallbackKeys() {
+  while (localHits.size >= MAX_FALLBACK_KEYS) {
+    const oldestKey = localHits.keys().next().value;
+    if (oldestKey === undefined) {
+      return;
+    }
+    localHits.delete(oldestKey);
+  }
+}
 
 const fallbackRateLimit = (
   key: string,
@@ -8,9 +38,14 @@ const fallbackRateLimit = (
   windowMs = 60_000,
 ): { success: boolean; remaining: number; retryAfterSec: number } => {
   const now = Date.now();
+  pruneFallbackHits(now);
+  if (!localHits.has(key)) {
+    trimFallbackKeys();
+  }
+
   const windowStart = now - windowMs;
-  const previous = localHits.get(key) ?? [];
-  const validHits = previous.filter((timestamp) => timestamp > windowStart);
+  const previous = localHits.get(key);
+  const validHits = (previous?.timestamps ?? []).filter((timestamp) => timestamp > windowStart);
 
   if (validHits.length >= maxRequests) {
     const retryAfterSec = Math.ceil((validHits[0] + windowMs - now) / 1000);
@@ -18,7 +53,7 @@ const fallbackRateLimit = (
   }
 
   validHits.push(now);
-  localHits.set(key, validHits);
+  localHits.set(key, { timestamps: validHits, windowMs });
   return { success: true, remaining: maxRequests - validHits.length, retryAfterSec: 0 };
 };
 

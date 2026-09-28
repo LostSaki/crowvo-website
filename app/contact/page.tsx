@@ -5,10 +5,33 @@ import { MarketingPage } from "@/components/marketing-page";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSent(true);
+    setSubmitting(true);
+    setMessage("");
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(formData.entries())),
+      });
+      const payload = (await response.json()) as { message?: string; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Could not send message.");
+      }
+      setSent(true);
+      setMessage(payload.message ?? "Thanks - we'll be in touch soon.");
+      e.currentTarget.reset();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -18,24 +41,25 @@ export default function ContactPage() {
       subtitle="Questions about access, partnerships, or bringing your community to Crowvo — we'd like to hear from you."
     >
       {sent ? (
-        <p className="glass-panel rounded-2xl p-5 text-sm text-muted">Thanks — we&apos;ll be in touch soon.</p>
+        <p className="glass-panel rounded-2xl p-5 text-sm text-muted">{message || "Thanks - we'll be in touch soon."}</p>
       ) : (
         <form onSubmit={onSubmit} className="glass-panel max-w-xl space-y-4 rounded-2xl p-6">
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Name
-            <input required className="field-input" />
+            <input name="name" required className="field-input" />
           </label>
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Email
-            <input type="email" required className="field-input" />
+            <input name="email" type="email" required className="field-input" />
           </label>
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Message
-            <textarea required rows={4} className="field-textarea" placeholder="Tell us about your community or question…" />
+            <textarea name="message" required rows={4} className="field-textarea" placeholder="Tell us about your community or question…" />
           </label>
-          <button type="submit" className="btn-primary">
-            Send message
+          <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+            {submitting ? "Sending..." : "Send message"}
           </button>
+          {message ? <p className="text-sm text-red-300">{message}</p> : null}
         </form>
       )}
     </MarketingPage>

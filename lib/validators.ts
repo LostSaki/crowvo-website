@@ -10,3 +10,15 @@ export const analyticsTrackSchema = z.object({
   sessionId: z.string().trim().max(120).optional(),
   metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
 });
+
+export const waitlistSignupSchema = z.object({
+  email: z.string().trim().email().max(320),
+  communityType: z.string().trim().min(2).max(160),
+});
+
+export const investorInterestSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  email: z.string().trim().email().max(320),
+  company: z.string().trim().max(160).optional(),
+  message: z.string().trim().min(2).max(2_000),
+});

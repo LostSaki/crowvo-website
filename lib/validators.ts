@@ -10,3 +10,9 @@ export const analyticsTrackSchema = z.object({
   sessionId: z.string().trim().max(120).optional(),
   metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
 });
+
+export const waitlistSignupSchema = z.object({
+  email: z.string().trim().email().max(254).transform((email) => email.toLowerCase()),
+  referralCode: z.string().trim().max(32).optional(),
+  source: z.string().trim().max(200).optional(),
+});

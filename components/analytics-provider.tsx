@@ -7,9 +7,10 @@ import { trackEvent } from "@/lib/analytics-client";
 
 export function AnalyticsProvider() {
   const pathname = usePathname();
+  const isAdminRoute = !pathname || pathname.startsWith("/admin");
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    if (isAdminRoute || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       return;
     }
 
@@ -17,14 +18,22 @@ export function AnalyticsProvider() {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://app.posthog.com",
       capture_pageview: false,
     });
-  }, []);
+  }, [isAdminRoute]);
 
   useEffect(() => {
+    if (isAdminRoute) {
+      return;
+    }
+
     posthog.capture("$pageview", { pathname });
     trackEvent("page_view", { pathname });
-  }, [pathname]);
+  }, [isAdminRoute, pathname]);
 
   useEffect(() => {
+    if (isAdminRoute) {
+      return;
+    }
+
     const marks = [25, 50, 75, 100];
     const seen = new Set<number>();
 
@@ -45,9 +54,13 @@ export function AnalyticsProvider() {
 
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [isAdminRoute]);
 
   useEffect(() => {
+    if (isAdminRoute) {
+      return;
+    }
+
     const handler = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       const tracked = target?.closest("[data-analytics-event]") as HTMLElement | null;
@@ -64,7 +77,7 @@ export function AnalyticsProvider() {
 
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
-  }, []);
+  }, [isAdminRoute]);
 
   return null;
 }

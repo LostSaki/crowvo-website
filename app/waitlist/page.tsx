@@ -5,10 +5,38 @@ import { MarketingPage } from "@/components/marketing-page";
 
 export default function WaitlistPage() {
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSent(true);
+    setSubmitting(true);
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+    const rawReferralCode = new URLSearchParams(window.location.search).get("ref")?.trim();
+    const referralCode = rawReferralCode || undefined;
+
+    try {
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: String(formData.get("email") ?? ""),
+          communityType: String(formData.get("communityType") ?? ""),
+          referralCode,
+        }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Could not save your request.");
+      }
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save your request.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -25,18 +53,20 @@ export default function WaitlistPage() {
         <form onSubmit={onSubmit} className="glass-panel max-w-xl space-y-4 rounded-2xl p-6">
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Email
-            <input type="email" required className="field-input" />
+            <input name="email" type="email" required className="field-input" />
           </label>
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             What kind of community?
             <input
+              name="communityType"
               required
               className="field-input"
               placeholder="Friend group, study club, local org, gaming group…"
             />
           </label>
-          <button type="submit" className="btn-primary">
-            Request access
+          {error ? <p className="text-sm text-red-300">{error}</p> : null}
+          <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+            {submitting ? "Saving…" : "Request access"}
           </button>
         </form>
       )}

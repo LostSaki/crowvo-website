@@ -5,10 +5,37 @@ import { MarketingPage } from "@/components/marketing-page";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSent(true);
+    setSubmitting(true);
+    setError("");
+
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const response = await fetch("/api/investor-interest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(formData.get("name") ?? ""),
+          email: String(formData.get("email") ?? ""),
+          company: String(formData.get("company") ?? ""),
+          message: String(formData.get("message") ?? ""),
+        }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Could not save your message.");
+      }
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save your message.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -23,18 +50,29 @@ export default function ContactPage() {
         <form onSubmit={onSubmit} className="glass-panel max-w-xl space-y-4 rounded-2xl p-6">
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Name
-            <input required className="field-input" />
+            <input name="name" required className="field-input" />
           </label>
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Email
-            <input type="email" required className="field-input" />
+            <input name="email" type="email" required className="field-input" />
+          </label>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
+            Company or community
+            <input name="company" required className="field-input" />
           </label>
           <label className="block text-xs font-semibold uppercase tracking-wide text-muted">
             Message
-            <textarea required rows={4} className="field-textarea" placeholder="Tell us about your community or question…" />
+            <textarea
+              name="message"
+              required
+              rows={4}
+              className="field-textarea"
+              placeholder="Tell us about your community or question…"
+            />
           </label>
-          <button type="submit" className="btn-primary">
-            Send message
+          {error ? <p className="text-sm text-red-300">{error}</p> : null}
+          <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-60">
+            {submitting ? "Sending…" : "Send message"}
           </button>
         </form>
       )}

@@ -29,6 +29,7 @@ export default function RootLayout({
 }>) {
   const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   const hotjarId = process.env.NEXT_PUBLIC_HOTJAR_ID;
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
@@ -52,6 +53,9 @@ export default function RootLayout({
               r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;a.appendChild(r);
             })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');`}
           </Script>
+        ) : null}
+        {turnstileSiteKey ? (
+          <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
         ) : null}
         <AnalyticsProvider />
         <Navbar />

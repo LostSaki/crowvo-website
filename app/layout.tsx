@@ -1,25 +1,34 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { AnalyticsProvider } from "@/components/analytics-provider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { fontBody, fontDisplay } from "@/lib/fonts";
 
 export const metadata: Metadata = {
-  title: "Crowvo | Communities first. People first. Privacy first.",
+  metadataBase: new URL("https://crow-vo.com"),
+  title: "Crowvo | Find your people. Go to things together.",
   description:
-    "Crowvo is built for communities — not advertisers. Talk, organize, and grow together without algorithms, data selling, or endless noise.",
+    "Communities for what you are into, events that get you out the door, and a way to meet the people you pass there. Private beta — join the waitlist.",
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png" }],
+    apple: [{ url: "/apple-touch-icon.png", type: "image/png" }],
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Crowvo",
+    url: "https://crow-vo.com",
+    title: "Crowvo | Find your people. Go to things together.",
+    description:
+      "Communities, events, and the people you pass there. Private beta — join the waitlist.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Crowvo | Find your people. Go to things together.",
+    description:
+      "Communities, events, and the people you pass there. Private beta — join the waitlist.",
+  },
 };
 
 export default function RootLayout({
@@ -31,8 +40,8 @@ export default function RootLayout({
   const hotjarId = process.env.NEXT_PUBLIC_HOTJAR_ID;
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="crowvo-mesh flex min-h-full flex-col">
+    <html lang="en" className={`${fontBody.variable} ${fontDisplay.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col bg-background font-sans">
         {gaId ? (
           <>
             <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" />

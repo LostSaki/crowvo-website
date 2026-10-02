@@ -23,8 +23,8 @@ const pillars = [
     copy: "We explain what we collect, why we collect it, and how communities can govern their own spaces.",
   },
   {
-    title: "Invite-only demo",
-    copy: "Public signups are closed during the demo. Access is granted through controlled invite codes.",
+    title: "Public Beta",
+    copy: "Crowvo is open for anyone to explore. Your feedback directly shapes what we build next.",
   },
 ];
 

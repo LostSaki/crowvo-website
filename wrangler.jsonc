@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "crowvo-website",
+  "name": "crowvo-worker",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-04-26",
   "compatibility_flags": ["nodejs_compat"],
@@ -25,6 +25,14 @@
   },
   "vars": {
     "NEXT_PUBLIC_SITE_URL": "https://crow-vo.com",
-    "NEXT_PUBLIC_CROWVO_APP_URL": "https://app.crow-vo.com"
-  }
+    "NEXT_PUBLIC_CROWVO_APP_URL": "https://app.crow-vo.com",
+    "NEXT_PUBLIC_DESKTOP_VERSION": "0.1.0",
+    "NEXT_PUBLIC_DESKTOP_DOWNLOAD_URL": ""
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "753db8e8c1c64602a9b3253e81560457"
+    }
+  ]
 }

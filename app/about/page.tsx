@@ -24,7 +24,7 @@ export default function AboutPage() {
     <MarketingPage
       eyebrow="WHY CROWVO EXISTS"
       title="Social platforms stopped serving people."
-      subtitle="Crowvo is our answer: community-first, privacy-first, and built around real relationships — not advertisers, not growth hacks, and not endless feeds designed to keep you angry."
+      subtitle="Crowvo is our answer: built around real groups, the plans they make, and the people you meet doing it — with you deciding who can see you."
     >
       <PillGrid items={reasons} />
       <div className="glass-panel rounded-2xl p-6">

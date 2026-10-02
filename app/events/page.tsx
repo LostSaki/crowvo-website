@@ -1,4 +1,4 @@
-import { MarketingPage, PillGrid, appUrl } from "@/components/marketing-page";
+import { MarketingPage, PillGrid } from "@/components/marketing-page";
 
 const items = [
   { title: "Plan together", copy: "Create events for game nights, meetups, volunteer days, or anything your group cares about." },
@@ -12,7 +12,7 @@ export default function EventsShowcasePage() {
       eyebrow="EVENTS"
       title="Bring people together."
       subtitle="When your community wants to meet, volunteer, celebrate, or organize — Crowvo keeps planning close to conversation."
-      cta={{ label: "Try the demo", href: `${appUrl}/join`, external: true }}
+      cta={{ label: "Try the demo", external: true }}
     >
       <PillGrid items={items} />
     </MarketingPage>

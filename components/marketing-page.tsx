@@ -1,19 +1,22 @@
+"use client";
+
 import Link from "next/link";
 import { ReactNode } from "react";
 import { AnimatedSection } from "@/components/animated-section";
-import { crowvoAppUrl } from "@/lib/app-url";
+import { useCrowvoAppUrl } from "@/lib/use-crowvo-app-url";
 
 type MarketingPageProps = {
   eyebrow?: string;
   title: string;
   subtitle?: string;
   children: ReactNode;
-  cta?: { label: string; href: string; external?: boolean };
+  cta?: { label: string; path?: string; external?: boolean };
 };
 
-const appUrl = crowvoAppUrl;
-
 export function MarketingPage({ eyebrow, title, subtitle, children, cta }: MarketingPageProps) {
+  const appUrl = useCrowvoAppUrl();
+  const ctaHref = cta?.path ?? `${appUrl}/signup`;
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6">
       <AnimatedSection>
@@ -26,12 +29,12 @@ export function MarketingPage({ eyebrow, title, subtitle, children, cta }: Marke
           <h1 className="text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">{title}</h1>
           {subtitle ? <p className="max-w-3xl text-base leading-relaxed text-muted sm:text-lg">{subtitle}</p> : null}
           {cta ? (
-            cta.external ? (
-              <a href={cta.href} target="_blank" rel="noopener noreferrer" className="btn-primary mt-2 inline-flex">
+            cta.external !== false ? (
+              <a href={ctaHref} target="_blank" rel="noopener noreferrer" className="btn-primary mt-2 inline-flex">
                 {cta.label}
               </a>
             ) : (
-              <Link href={cta.href} className="btn-primary mt-2 inline-flex">
+              <Link href={ctaHref} className="btn-primary mt-2 inline-flex">
                 {cta.label}
               </Link>
             )
@@ -72,5 +75,3 @@ export function FaqList({ items }: { items: { q: string; a: string }[] }) {
     </div>
   );
 }
-
-export { appUrl };

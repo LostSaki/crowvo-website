@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { prisma } from "@/lib/prisma";
+import { listRecentAnalyticsEvents } from "@/lib/analytics-store";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,15 +13,7 @@ export async function GET(request: NextRequest) {
   let recentEvents: { eventName: string; utmSource: string | null; createdAt: Date }[] = [];
 
   try {
-    recentEvents = await prisma.analyticsEvent.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 500,
-      select: {
-        eventName: true,
-        utmSource: true,
-        createdAt: true,
-      },
-    });
+    recentEvents = await listRecentAnalyticsEvents(500);
   } catch (error) {
     console.error("Admin analytics query failed.", error);
     return NextResponse.json({ error: "Analytics query failed." }, { status: 500 });

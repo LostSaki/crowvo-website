@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { createAnalyticsEvent } from "@/lib/analytics-store";
 import { analyticsTrackSchema } from "@/lib/validators";
 import { limitRequests } from "@/lib/rate-limit";
 
@@ -21,17 +21,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid analytics payload." }, { status: 400 });
     }
 
-    await prisma.analyticsEvent.create({
-      data: {
-        eventName: parsed.data.eventName,
-        path: parsed.data.path,
-        referrer: parsed.data.referrer,
-        utmSource: parsed.data.utmSource,
-        utmMedium: parsed.data.utmMedium,
-        utmCampaign: parsed.data.utmCampaign,
-        sessionId: parsed.data.sessionId,
-        metadata: parsed.data.metadata,
-      },
+    await createAnalyticsEvent({
+      eventName: parsed.data.eventName,
+      path: parsed.data.path,
+      referrer: parsed.data.referrer,
+      utmSource: parsed.data.utmSource,
+      utmMedium: parsed.data.utmMedium,
+      utmCampaign: parsed.data.utmCampaign,
+      sessionId: parsed.data.sessionId,
+      metadata: parsed.data.metadata,
     });
 
     return NextResponse.json({ ok: true }, { status: 201 });

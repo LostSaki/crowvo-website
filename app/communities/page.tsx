@@ -1,4 +1,4 @@
-import { MarketingPage, PillGrid, appUrl } from "@/components/marketing-page";
+import { MarketingPage, PillGrid } from "@/components/marketing-page";
 
 const examples = [
   { title: "Gaming groups", copy: "Coordinate sessions, share clips, and keep your squad in one trusted space." },
@@ -15,7 +15,7 @@ export default function CommunitiesPage() {
       eyebrow="WHO IT'S FOR"
       title="Communities people actually want to be part of."
       subtitle="Crowvo is for groups that care about each other — not audiences, not follower counts, and not engagement charts."
-      cta={{ label: "Get an invite", href: `${appUrl}/join`, external: true }}
+      cta={{ label: "Join Public Beta", external: true }}
     >
       <PillGrid items={examples} />
     </MarketingPage>

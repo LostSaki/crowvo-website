@@ -109,6 +109,17 @@ export async function createWaitlistSignup(data: {
   return mapRow(row);
 }
 
+/**
+ * Records that the invite email actually reached the provider.
+ *
+ * Call this only after a successful send. approveWaitlistSignup used to set notifiedAt
+ * itself, which meant the column recorded "we approved them" rather than "they were
+ * told" — so a failed send was indistinguishable from a delivered one, and there was no
+ * way to find the people who never received their code.
+ *
+ * With this split, `notifiedAt IS NULL AND "inviteCode" IS NOT NULL` is exactly the set
+ * of people owed an email.
+ */
 export async function markWaitlistNotified(id: string): Promise<void> {
   await execute(`UPDATE "WaitlistSignup" SET "notifiedAt" = NOW() WHERE id = $1`, [id]);
 }
@@ -122,8 +133,7 @@ export async function approveWaitlistSignup(
     `UPDATE "WaitlistSignup"
      SET status = 'auto_invited',
          "inviteCode" = $2,
-         "backendCodeId" = $3,
-         "notifiedAt" = NOW()
+         "backendCodeId" = $3
      WHERE id = $1
      RETURNING ${selectColumns}`,
     [id, inviteCode, backendCodeId],

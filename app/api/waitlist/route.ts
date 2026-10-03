@@ -92,6 +92,30 @@ async function countQueued() {
 
 
 
+
+/**
+ * Sends and reports. Every call site here used to await sendEmail and discard the result,
+ * so an invalid API key or an unverified sender produced a signup row, a cheerful
+ * response, and no email — with nothing written down anywhere. The most common failure
+ * of this endpoint was therefore completely invisible.
+ */
+async function sendAndReport(
+  label: string,
+  to: string,
+  payload: Parameters<typeof sendEmail>[0],
+): Promise<boolean> {
+  const result = await sendEmail(payload);
+  if (!result.ok) {
+    // Logged with the address so a specific person can be chased, and with the provider's
+    // own detail so the cause is visible without reproducing it.
+    console.error(
+      `[waitlist] ${label} email FAILED to ${to}: ${result.reason}` +
+        ("detail" in result && result.detail ? ` — ${String(result.detail).slice(0, 300)}` : ""),
+    );
+    return false;
+  }
+  return true;
+}
 export async function POST(req: NextRequest) {
 
   try {
@@ -287,10 +311,13 @@ export async function POST(req: NextRequest) {
 
 
     if (emailConfigured()) {
+      // Only a delivered signup email counts as notified. The admin notice is
+      // incidental and must not mark the person as told.
+      let delivered = false;
 
       if (status === "auto_invited" && inviteCode) {
 
-        await sendEmail({
+        delivered = await sendAndReport("signup", email, {
 
           to: email,
 
@@ -300,7 +327,7 @@ export async function POST(req: NextRequest) {
 
         if (adminEmail) {
 
-          await sendEmail({
+          void sendAndReport("admin-notice", adminEmail, {
 
             to: adminEmail,
 
@@ -318,7 +345,7 @@ export async function POST(req: NextRequest) {
 
       } else {
 
-        await sendEmail({
+        delivered = await sendAndReport("signup", email, {
 
           to: email,
 
@@ -328,7 +355,7 @@ export async function POST(req: NextRequest) {
 
         if (adminEmail) {
 
-          await sendEmail({
+          void sendAndReport("admin-notice", adminEmail, {
 
             to: adminEmail,
 
@@ -348,7 +375,13 @@ export async function POST(req: NextRequest) {
 
 
 
-      await markWaitlistNotified(signup.id);
+      if (delivered) {
+        await markWaitlistNotified(signup.id);
+      } else {
+        // Left unmarked on purpose: this row is now discoverable as someone owed an
+        // email, via notifiedAt IS NULL, once sending is working again.
+        console.error(`[waitlist] ${email} saved but NOT emailed — left unnotified for retry`);
+      }
 
     }
 
@@ -370,9 +403,7 @@ export async function POST(req: NextRequest) {
 
       referredCount,
 
-      resendTestMode: resendTestMode(),
 
-      emailConfigured: emailConfigured(),
 
     });
 
@@ -410,9 +441,7 @@ export async function GET() {
 
       slotsRemaining: Math.max(0, limit - autoInvited),
 
-      emailConfigured: emailConfigured(),
 
-      resendTestMode: resendTestMode(),
 
     });
 
@@ -430,9 +459,7 @@ export async function GET() {
 
       slotsRemaining: waitlistLimit(),
 
-      emailConfigured: emailConfigured(),
 
-      resendTestMode: resendTestMode(),
 
       dbReady: false,
 

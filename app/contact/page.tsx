@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { MarketingPage } from "@/components/marketing-page";
 
-const INBOX = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "dylsn@gmail.com";
+const INBOX = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "dylan.aruizmoya@gmail.com";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);

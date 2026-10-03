@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import { AnimatedSection } from "@/components/animated-section";
 import { MarketingPage, PillGrid } from "@/components/marketing-page";
 
-const INBOX = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "dylsn@gmail.com";
+const INBOX = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "dylan.aruizmoya@gmail.com";
 
 const highlights = [
   {

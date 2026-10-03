@@ -38,11 +38,11 @@ const faqs = [
   },
   {
     q: "How do I contact Crowvo?",
-    a: "Use our contact form for general questions, partnerships, and community onboarding. Email dylsn@gmail.com and we'll get back to you.",
+    a: "Use our contact form for general questions, partnerships, and community onboarding. Email dylan.aruizmoya@gmail.com and we'll get back to you.",
   },
   {
     q: "I'm an investor — where can I learn more?",
-    a: 'Visit the Investors page for an overview and to request our brief. You can also email dylsn@gmail.com with the subject line "Investor inquiry".',
+    a: 'Visit the Investors page for an overview and to request our brief. You can also email dylan.aruizmoya@gmail.com with the subject line "Investor inquiry".',
   },
 ];
 
@@ -58,8 +58,8 @@ function FaqContactSection() {
             Reach out for access help, partnerships, press, or anything else we didn&apos;t cover here.
           </p>
           <p className="mt-4 text-sm">
-            <a href="mailto:dylsn@gmail.com" className="text-accent hover:underline">
-              dylsn@gmail.com
+            <a href="mailto:dylan.aruizmoya@gmail.com" className="text-accent hover:underline">
+              dylan.aruizmoya@gmail.com
             </a>
           </p>
         </div>

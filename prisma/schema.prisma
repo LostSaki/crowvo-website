@@ -10,19 +10,19 @@ datasource db {
 }
 
 model WaitlistSignup {
-  id            String          @id @default(cuid())
-  email         String          @unique
-  inviteCode    String?         @unique
+  id            String           @id @default(cuid())
+  email         String           @unique
+  inviteCode    String?          @unique
   communityType String?
-  status        String          @default("queued")
+  status        String           @default("queued")
   backendCodeId String?
   referralCode  String?
   source        String?
   referredById  String?
-  referredBy    WaitlistSignup? @relation("ReferralTree", fields: [referredById], references: [id])
+  referredBy    WaitlistSignup?  @relation("ReferralTree", fields: [referredById], references: [id])
   referrals     WaitlistSignup[] @relation("ReferralTree")
   notifiedAt    DateTime?
-  createdAt     DateTime        @default(now())
+  createdAt     DateTime         @default(now())
 }
 
 model InvestorInterest {
@@ -36,17 +36,32 @@ model InvestorInterest {
 }
 
 model AnalyticsEvent {
-  id         String   @id @default(cuid())
-  eventName  String
-  path       String?
-  referrer   String?
-  utmSource  String?
-  utmMedium  String?
+  id          String   @id @default(cuid())
+  eventName   String
+  path        String?
+  referrer    String?
+  utmSource   String?
+  utmMedium   String?
   utmCampaign String?
-  sessionId  String?
-  metadata   Json?
-  createdAt  DateTime @default(now())
+  sessionId   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
 
   @@index([eventName, createdAt])
   @@index([sessionId, createdAt])
+}
+
+model RateLimitBucket {
+  // Shared rate-limit counters, also modelled identically in crowvo-app/backend. Both
+  // schemas must stay in step: a `prisma db push` from either package drops tables it
+  // does not know about, which is how a shared table gets destroyed by a routine push.
+  //
+  // Used here because Cloudflare Workers give each isolate its own memory, so the previous
+  // in-process Map limiter reset whenever a new isolate served the request — the limit
+  // looked enforced and was not. Postgres is already a dependency of this site.
+  key       String   @id
+  count     Int      @default(0)
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }

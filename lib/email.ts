@@ -3,6 +3,8 @@ type SendEmailInput = {
   subject: string;
   html: string;
   text?: string;
+  /** Where replies go. Defaults to the contact inbox; see sendEmail. */
+  replyTo?: string;
 };
 
 export type SendEmailResult =
@@ -25,6 +27,14 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const from = process.env.RESEND_FROM_EMAIL?.trim() || "Crowvo <onboarding@resend.dev>";
   const to = Array.isArray(input.to) ? input.to : [input.to];
 
+  // crow-vo.com has no inbound mail: its only MX is Resend's bounce handler, so a reply
+  // to the sending address disappears. People do reply to an invite email, so point
+  // replies at a mailbox that exists.
+  const replyTo =
+    input.replyTo?.trim() ||
+    process.env.RESEND_REPLY_TO?.trim() ||
+    process.env.CONTACT_INBOX_EMAIL?.trim();
+
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -37,6 +47,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
       subject: input.subject,
       html: input.html,
       text: input.text,
+      ...(replyTo ? { reply_to: replyTo } : {}),
     }),
   });
 

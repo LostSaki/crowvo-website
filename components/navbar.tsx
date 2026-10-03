@@ -4,9 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CrowvoMark } from "@/components/crowvo-mark";
+import { useCrowvoAppUrl } from "@/lib/use-crowvo-app-url";
 
 /**
- * Four links and one CTA, matching the Marketing board.
+ * Four links, a Log in link and one CTA.
+ *
+ * Log in is deliberately quiet next to the waitlist button: most visitors do not have an
+ * account yet, so the waitlist stays the primary action. But people who already signed up
+ * had no route into the app from this site at all, which made the marketing page a dead
+ * end for exactly the users who had already converted.
  *
  * The primary action is the waitlist, not Download: sign-up needs an invite code,
  * so sending a stranger to the stores first is how the old site produced installs
@@ -22,6 +28,7 @@ const links = [
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const appUrl = useCrowvoAppUrl();
 
   useEffect(() => {
     setOpen(false);
@@ -60,8 +67,17 @@ export function Navbar() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
+          <a
+            href={`${appUrl}/login`}
+            data-analytics-event="cta_login_click"
+            data-analytics-cta="navbar_login"
+            className="hidden h-11 items-center rounded-lg px-3 text-[15px] text-muted transition hover:text-foreground sm:inline-flex"
+          >
+            Log in
+          </a>
           <Link
-            href="/waitlist"
+
+          href="/waitlist"
             data-analytics-event="cta_waitlist_click"
             data-analytics-cta="navbar_waitlist"
             className="inline-flex h-11 items-center justify-center rounded-full bg-foreground px-5 text-[15px] font-semibold text-background transition hover:opacity-90"
@@ -101,6 +117,15 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+              <a
+                href={`${appUrl}/login`}
+                data-analytics-event="cta_login_click"
+                data-analytics-cta="mobilemenu_login"
+                className="flex min-h-11 items-center rounded-xl px-3 text-[15px] text-muted transition hover:bg-surface hover:text-foreground"
+                onClick={() => setOpen(false)}
+              >
+                Log in
+              </a>
           </nav>
         </div>
       ) : null}

@@ -1,6 +1,15 @@
 import Link from "next/link";
 import { MarketingPage, PillGrid } from "@/components/marketing-page";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Safety at Crowvo",
+  description:
+    "How Crowvo keeps people safe: who can find you, what you share, reporting and blocking, and meeting up with care.",
+};
+
+
 const pillars = [
   {
     title: "Privacy-first by design",

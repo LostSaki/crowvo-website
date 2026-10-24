@@ -30,11 +30,11 @@ const faqs = [
   },
   {
     q: "How do I join Crowvo?",
-    a: "Crowvo is in Public Beta — anyone can create an account at app.crow-vo.com with email, Google, or Apple sign-in. No invite code required for normal accounts.",
+    a: "Crowvo is in private beta, so signing up needs an invite code. Join the waitlist and we will send you one as we let people in. If you already have a code, enter it at app.crow-vo.com to create your account.",
   },
   {
     q: "What are invite codes for?",
-    a: "Team and admin codes are reserved for platform administrators, developers, and future private programs. If you have a team code, use Team code in the header to redeem it during signup.",
+    a: "Every account needs a code during private beta. Most are ordinary invites from the waitlist; team and admin codes are separate, and reserved for platform administrators and developers.",
   },
   {
     q: "How do I contact Crowvo?",

@@ -128,7 +128,7 @@ export function EventsPreview() {
               <p className="font-semibold text-foreground">{e.title}</p>
               <p className="text-muted">{e.when}</p>
             </div>
-            <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-semibold text-accent">{e.rsvp}</span>
+            <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-semibold text-accent">{e.rsvp}</span>
           </div>
         ))}
       </div>
@@ -139,8 +139,8 @@ export function EventsPreview() {
 export function PublicBetaPreview() {
   return (
     <MarketingCard>
-      <SectionLabel>Public Beta</SectionLabel>
-      <p className="mt-2 text-xs text-muted">Open signup — help shape Crowvo with your feedback.</p>
+      <SectionLabel>Private beta</SectionLabel>
+      <p className="mt-2 text-xs text-muted">Invite-only — help shape Crowvo with your feedback.</p>
       <div className="mt-3 rounded-lg border border-border bg-surface-elevated/80 px-3 py-2 text-xs text-muted">
         🚧 Actively improving with the community
       </div>

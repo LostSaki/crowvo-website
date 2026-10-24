@@ -159,8 +159,11 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: "cookies",
     title: "5. Cookies and analytics",
     paragraphs: [
-      "The app uses local storage for authentication tokens during beta. The marketing site may use analytics tools (such as Google Analytics or Hotjar) when configured, to understand traffic and improve pages.",
-      "We will expand cookie controls as we ship a consent experience. You can also use browser controls to limit analytics cookies where available.",
+      "The app uses local storage for authentication tokens during beta.",
+      "On the marketing site we ask before any analytics run. Choosing Essential only, or not answering, means no analytics load and nothing about your visit is recorded. Choosing Accept enables the tools below.",
+      "Third-party analytics, when configured: Google Analytics and Hotjar (traffic and page behaviour), and PostHog (product analytics - page views, scroll depth and clicks on marketing calls to action).",
+      "First-party analytics: we also record our own events - the page path, the referring URL, any utm_source / utm_medium / utm_campaign on the link you arrived through, and a randomly generated identifier stored in your browser as crowvo-session-id. That identifier is not tied to your account or to any personal detail, but it does persist between visits, so it can link together the pages one browser views over time. We use it to count unique visitors rather than raw page views. We do not store your IP address with these events; it is used only, and transiently, to rate-limit the endpoint.",
+      "You can withdraw consent by clearing this site's data in your browser, which removes the stored choice and the identifier and brings the question back.",
     ],
   },
   {

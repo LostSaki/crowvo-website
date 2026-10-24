@@ -4,15 +4,15 @@
   color-scheme: dark;
 
   /* Canvas tokens — see the design artifact. Solid surfaces, hairline borders, no glass. */
-  --background: #0e0e12;
+  --background: #0f0f11;
   --foreground: #f2f2f3;
   --muted: #a8a8b3;
   --muted-dim: #8a8a94;
   --muted-faint: #6e6e78;
-  --surface: #131317;
+  --surface: #17171a;
   --surface-elevated: #16161c;
   --surface-hover: #1c1c23;
-  --border: #23232b;
+  --border: #2a2a30;
   --border-strong: #2a2a32;
   --border-input: #2e2e38;
 
@@ -40,7 +40,7 @@
   /* legacy aliases kept so untouched pages still compile */
   --cyan: #46b5a6;
   --border-subtle: #1c1c23;
-  --glass: #131317;
+  --glass: #17171a;
   --accent-glow: rgba(109, 124, 255, 0.28);
   --mesh-a: rgba(109, 124, 255, 0.14);
   --mesh-b: rgba(208, 131, 92, 0.1);
@@ -73,6 +73,12 @@
   --color-iris: var(--iris);
   --color-teal: var(--teal);
   --color-amber: var(--amber);
+
+  /* Type floor. The design sets 13px as the smallest size and reserves it for
+     metadata; Tailwind's default text-xs is 12px and this site has 50 of them,
+     so the token is raised here rather than edited at 50 call sites. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.125rem;
 }
 
 .font-display {

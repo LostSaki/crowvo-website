@@ -1,6 +1,7 @@
 "use client";
 
 import posthog from "posthog-js";
+import { analyticsAllowed } from "./consent";
 
 function getSessionId() {
   const key = "crowvo-session-id";
@@ -23,6 +24,11 @@ function getAttribution() {
 }
 
 export function trackEvent(eventName: string, metadata?: Record<string, string | number | boolean | null>) {
+  // No consent, no collection -- and no session id minted either. This is the
+  // first-party stream, so it is ours to stop at the source rather than ours to
+  // send and then filter.
+  if (!analyticsAllowed()) return;
+
   const payload = {
     eventName,
     path: window.location.pathname,
@@ -32,7 +38,7 @@ export function trackEvent(eventName: string, metadata?: Record<string, string |
     metadata,
   };
 
-  posthog.capture(eventName, payload);
+  if (posthog.__loaded) posthog.capture(eventName, payload);
   fetch("/api/analytics/track", {
     method: "POST",
     headers: { "content-type": "application/json" },

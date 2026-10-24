@@ -500,7 +500,7 @@ export function AdminDashboard() {
                           key={s}
                           type="button"
                           onClick={() => void updateFeedbackStatus(f.id, s).catch((e) => setError(e instanceof Error ? e.message : "Failed"))}
-                          className="rounded border border-border px-2 py-0.5 text-[10px] hover:border-accent/40"
+                          className="rounded border border-border px-2 py-0.5 text-xs hover:border-accent/40"
                         >
                           {s.replace("_", " ")}
                         </button>

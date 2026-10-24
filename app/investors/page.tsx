@@ -75,8 +75,8 @@ export default function InvestorsPage() {
         <div className="glass-panel mt-4 rounded-2xl p-6">
           <h2 className="text-lg font-semibold">What to expect</h2>
           <ul className="mt-3 space-y-2 text-sm leading-relaxed text-muted">
-            <li>· Live Public Beta at app.crow-vo.com — open signup with community feedback loop</li>
-            <li>· Early traction via Public Beta signups and community-led onboarding</li>
+            <li>· Live private beta at app.crow-vo.com — invite-gated signup with community feedback loop</li>
+            <li>· Early traction via waitlist demand and community-led onboarding</li>
             <li>· Focus on governance, events, and calm social velocity inside Realms</li>
             <li>· Deck and metrics shared after a short intro call</li>
           </ul>
